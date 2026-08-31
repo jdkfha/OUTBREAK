@@ -1,0 +1,5056 @@
+<!DOCTYPE html>
+ <html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1.0">
+ <title>OUTBREAK</title>
+<style>
+ *{box-sizing:border-box}
+html,body{
+     margin:0;
+     width:100%;
+     height:100%;
+     overflow:hidden;
+     background:#090d0b;
+     color:#eee;
+     font-family:Arial,Helvetica,sans-serif;
+ }
+canvas{
+
+     display:block;
+     width:100%;
+     height:100%;
+ }
+button,select{
+     font:inherit;
+ }
+button{
+     cursor:pointer;
+ }
+#menu{
+     position:fixed;
+     inset:0;
+     z-index:20;
+     display:flex;
+     background:
+         radial-gradient(circle at 50% 40%,#27302b 0,#111613 42%,#070a08 100%);
+ }
+.menuLeft{
+     flex:1;
+     display:flex;
+     flex-direction:column;
+     justify-content:center;
+     align-items:center;
+     min-width:0;
+ }
+.title{
+     margin:0;
+     font-size:clamp(42px,7vw,78px);
+     letter-spacing:12px;
+     color:#e7e8e4;
+     text-shadow:0 5px 20px #000;
+ }
+.subtitle{
+     margin:8px 0 32px;
+     color:#8f9891;
+     letter-spacing:4px;
+     font-size:12px;
+ }
+.start{
+     padding:15px 70px;
+     border:1px solid #8e9a90;
+     border-radius:5px;
+     background:#c8cec8;
+     color:#111;
+     font-weight:bold;
+     letter-spacing:2px;
+     box-shadow:0 5px 20px #0008;
+ }
+.start:hover{
+     background:#e0e4df;
+ }
+.controlsHint{
+     margin-top:20px;
+     color:#7e8880;
+     font-size:12px;
+ }
+.panel{
+     width:310px;
+     padding:28px;
+     background:#111613ee;
+     border-left:1px solid #333b35;
+     box-shadow:-10px 0 35px #0005;
+ }
+.panel h2{
+     margin:0 0 18px;
+     font-size:18px;
+     letter-spacing:3px;
+ }
+.charButtons{
+     display:flex;
+     gap:6px;
+ }
+.charButtons button{
+     flex:1;
+     padding:9px 4px;
+     color:#ddd;
+     background:#202722;
+     border:1px solid #39423b;
+     border-radius:4px;
+ }
+.charButtons button.active{
+     background:#667267;
+     color:white;
+     border-color:#aeb8ae;
+ }
+.preview{
+     height:230px;
+     margin:14px 0;
+     display:flex;
+     justify-content:center;
+     align-items:center;
+     background:
+         radial-gradient(circle at center,#252d28 0,#111613 70%);
+     border:1px solid #303832;
+ }
+#preview{
+     width:190px;
+     height:220px;
+ }
+.charName{
+     text-align:center;
+     font-size:13px;
+     font-weight:bold;
+     margin-bottom:18px;
+ }
+.options{
+     display:flex;
+     gap:8px;
+     margin-top:15px;
+ }
+select{
+     flex:1;
+     min-width:0;
+     padding:10px;
+     border-radius:4px;
+     border:1px solid #4a534c;
+     background:#202722;
+     color:#eee;
+ }
+#hud{
+     position:fixed;
+     left:15px;
+     top:14px;
+     z-index:10;
+     padding:8px 11px;
+     border-radius:5px;
+     background:#080b09aa;
+     border:1px solid #303832;
+     font-size:16px;
+     text-shadow:2px 2px 4px #000;
+ }
+#pause{
+     position:fixed;
+     right:15px;
+     top:14px;
+     z-index:10;
+     padding:9px 15px;
+     background:#202722dd;
+     color:#eee;
+     border:1px solid #515a53;
+     border-radius:4px;
+ }
+#help{
+     position:fixed;
+     bottom:12px;
+     left:14px;
+     z-index:10;
+     color:#c5cbc6;
+     font-size:12px;
+     text-shadow:2px 2px 5px #000;
+ }
+#message{
+     position:fixed;
+     top:65px;
+     left:50%;
+     transform:translateX(-50%);
+     z-index:12;
+     opacity:0;
+     font-size:17px;
+     font-weight:bold;
+     text-shadow:2px 2px 5px #000;
+     transition:.2s;
+ }
+.overlay{
+     position:fixed;
+     inset:0;
+     z-index:30;
+     display:none;
+     align-items:center;
+     justify-content:center;
+     background:#000b;
+ }
+.box{
+     width:310px;
+     padding:30px;
+     text-align:center;
+     background:#151a17;
+     border:1px solid #454e47;
+     border-radius:7px;
+     box-shadow:0 15px 60px #000;
+ }
+.box h1{
+     letter-spacing:4px;
+ }
+.pauseControls{
+     display:none;
+     margin:12px 0 16px;
+     padding:12px 14px;
+     text-align:left;
+     border:1px solid #39423b;
+     border-radius:5px;
+     background:#0e1210;
+     color:#cbd1cc;
+     font-size:12px;
+     line-height:1.75;
+}
+.pauseControls.open{display:block;}
+.pauseControls b{color:#f0f2ef;}
+.pauseControls .muted{color:#89928b;}
+.box button{
+     display:block;
+     width:100%;
+     margin-top:10px;
+     padding:11px;
+     border:0;
+     border-radius:4px;
+ }
+@media(max-width:520px){
+    #mobileCustomize{
+        right:5px;
+        bottom:5px;
+    }
+    #mobileResetLayout{
+        right:78px;
+        bottom:5px;
+    }
+    #mobileControls.active{
+        padding:0 5px;
+        bottom:2px;
+    }
+    #mobileJoystick{
+        width:124px;
+        height:124px;
+        margin-left:0;
+    }
+    .mobileActions{
+        width:196px;
+        height:68px;
+        margin-right:0;
+        gap:5px;
+    }
+    #mobileShoot{
+        width:76px;
+        height:76px;
+        min-width:76px;
+        min-height:76px;
+        bottom:auto;
+        font-size:13px;
+    }
+    #mobileCar{
+        width:54px;
+        height:48px;
+        min-width:54px;
+        min-height:48px;
+    }
+    #mobilePause{
+        width:54px;
+        height:48px;
+        min-width:54px;
+        min-height:48px;
+    }
+}
+@media(max-width:700px){
+     #menu{
+         overflow:auto;
+     }
+    .panel{
+         width:245px;
+         padding:18px;
+     }
+    .title{
+         letter-spacing:6px;
+     }
+    #help{
+         font-size:10px;
+     }
+ }
+ 
+#instagramCredit{
+    position:absolute;
+    right:18px;
+    bottom:16px;
+    z-index:25;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#f3f3f3;
+    font-size:19px;
+    font-weight:bold;
+    letter-spacing:.5px;
+    pointer-events:none;
+}
+#instagramCredit svg{
+    width:40px;
+    height:40px;
+    flex:none;
+}
+#mobileControls{
+    display:none;
+}
+@media (max-width:900px), (pointer:coarse){
+    .controlsHint{
+        font-size:11px;
+        text-align:center;
+        max-width:310px;
+        line-height:1.45;
+    }
+    #mobileControls.active{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:4px;
+        z-index:18;
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-end;
+        padding:0 8px;
+        pointer-events:none;
+        user-select:none;
+        -webkit-user-select:none;
+        touch-action:none;
+    }
+    #mobileJoystick,
+    .mobileActions{
+        pointer-events:auto;
+    }
+
+    /* Thumb joystick */
+    #mobileJoystick{
+        position:relative;
+        width:136px;
+        height:136px;
+        margin-left:2px;
+        margin-bottom:2px;
+        border-radius:50%;
+        background:#0e1410c9;
+        border:2px solid #778078;
+        box-shadow:inset 0 0 0 10px #ffffff08,0 4px 18px #0008;
+        touch-action:none;
+    }
+    #mobileJoystick::before{
+        content:"";
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:74px;
+        height:74px;
+        transform:translate(-50%,-50%);
+        border-radius:50%;
+        border:1px solid #ffffff18;
+    }
+    #joystickKnob{
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:62px;
+        height:62px;
+        transform:translate(-50%,-50%);
+        border-radius:50%;
+        border:2px solid #aeb8b0;
+        background:#59645ce8;
+        box-shadow:0 4px 12px #0009,inset 0 0 0 5px #ffffff0b;
+        pointer-events:none;
+    }
+
+    /* Right-thumb controls */
+    .mobileActions{
+        position:relative;
+        width:214px;
+        height:72px;
+        margin-right:2px;
+        margin-bottom:4px;
+        display:flex;
+        align-items:flex-end;
+        justify-content:flex-end;
+        gap:7px;
+        pointer-events:auto;
+    }
+    .mobileControlBtn{
+        border:1px solid #8c958e;
+        border-radius:18px;
+        background:#111713e8;
+        color:#f3f4f1;
+        font-weight:bold;
+        letter-spacing:.5px;
+        box-shadow:0 4px 13px #0009;
+        touch-action:none;
+    }
+    .mobileControlBtn:active,
+    .mobileControlBtn.pressed{
+        transform:scale(.96);
+        background:#59645c;
+    }
+    #mobileShoot{
+        position:relative;
+        right:auto;
+        bottom:auto;
+        width:82px;
+        height:82px;
+        min-width:82px;
+        min-height:82px;
+        border-radius:50%;
+        font-size:14px;
+        background:#4d1c20ee;
+        border:2px solid #a86a70;
+        box-shadow:0 5px 18px #000a,inset 0 0 0 6px #ffffff08;
+        order:2;
+        margin-bottom:0;
+    }
+    #mobileShoot::after{
+        content:"";
+        position:absolute;
+        inset:11px;
+        border-radius:50%;
+        border:1px solid #ffffff24;
+        pointer-events:none;
+    }
+    #mobileCar{
+        position:relative;
+        left:auto;
+        bottom:auto;
+        width:58px;
+        height:52px;
+        min-width:58px;
+        min-height:52px;
+        border-radius:16px;
+        font-size:12px;
+        order:1;
+        margin-bottom:0;
+    }
+    #mobilePause{
+        position:relative;
+        right:auto;
+        bottom:auto;
+        width:58px;
+        height:52px;
+        min-width:58px;
+        min-height:52px;
+        border-radius:16px;
+        font-size:10px;
+        order:3;
+        margin-bottom:0;
+    }
+    #help{
+        bottom:162px;
+        max-width:52vw;
+    }
+    #pause{
+        display:none !important;
+    }
+
+    .mobileEditBtn{
+        position:fixed;
+        min-height:32px;
+        padding:6px 10px;
+        border:1px solid #7d877f;
+        border-radius:10px;
+        background:#111713e8;
+        color:#f3f4f1;
+        font-size:9px;
+        font-weight:bold;
+        letter-spacing:.4px;
+        pointer-events:auto;
+        touch-action:none;
+        z-index:24;
+    }
+    #mobileCustomize{
+        right:8px;
+        bottom:8px;
+    }
+    #mobileResetLayout{
+        right:84px;
+        bottom:8px;
+        display:none;
+    }
+
+    #mobileControls.customizing{
+        pointer-events:auto;
+    }
+    #mobileControls.customizing .mobileMovable{
+        outline:2px dashed #d5d9d5;
+        outline-offset:3px;
+        cursor:move;
+        touch-action:none;
+    }
+    #mobileControls.customizing #mobileJoystick{
+        box-shadow:inset 0 0 0 10px #ffffff08,0 4px 18px #0008,0 0 0 3px #ffffff12;
+    }
+    #mobileControls.customizing #mobileResetLayout{
+        display:block;
+    }
+    #mobileControls.customizing #mobileCustomize{
+        background:#59645c;
+    }
+}
+@media(max-width:700px){
+    #instagramCredit{
+        right:10px;
+        bottom:8px;
+        font-size:16px;
+    }
+    #instagramCredit svg{
+        width:34px;
+        height:34px;
+    }
+}
+
+</style>
+ </head>
+<body>
+<div id="menu">
+    <div class="menuLeft">
+         <h1 class="title">OUTBREAK</h1>
+         <div class="subtitle">SURVIVE THE COLLAPSE</div>
+        <button class="start" onclick="startGame()">START GAME</button>
+        <div class="controlsHint">
+             WASD / ARROWS TO MOVE • E = CAR • MOUSE / SPACE = SHOOT • MOBILE CONTROLS SUPPORTED
+         </div>
+     </div>
+    <div class="panel">
+        <h2>CHARACTERS</h2>
+        <div class="charButtons">
+             <button id="maya" onclick="chooseCharacter('maya')">Maya</button>
+             <button id="marcus" onclick="chooseCharacter('marcus')">Marcus</button>
+             <button id="victor" onclick="chooseCharacter('victor')">Victor</button>
+         </div>
+        <div class="preview">
+             <canvas id="preview" width="190" height="220"></canvas>
+         </div>
+        <div id="charName" class="charName">Maya</div>
+        <div class="options">
+             <select id="difficulty">
+                 <option value="easy">Easy</option>
+                 <option value="normal" selected>Normal</option>
+                 <option value="hard">Hard</option>
+                 <option value="impossible">Impossible</option>
+             </select>
+            <select id="location">
+                 <option value="city">Abandoned City</option>
+                 <option value="snow">Snowy Town</option>
+                 <option value="rain">Rainy Suburbs</option>
+                 <option value="forest">Forest</option>
+             </select>
+         </div>
+    </div>
+    <div id="instagramCredit" aria-label="Instagram jfl832">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <defs>
+                <linearGradient id="igGradient" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#feda75"/>
+                    <stop offset="28%" stop-color="#fa7e1e"/>
+                    <stop offset="52%" stop-color="#d62976"/>
+                    <stop offset="76%" stop-color="#962fbf"/>
+                    <stop offset="100%" stop-color="#4f5bd5"/>
+                </linearGradient>
+            </defs>
+            <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="url(#igGradient)"/>
+            <rect x="6.5" y="6.5" width="11" height="11" rx="3.2"
+                  fill="none" stroke="#fff" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="2.6"
+                    fill="none" stroke="#fff" stroke-width="1.8"/>
+            <circle cx="16.7" cy="7.3" r="1.05" fill="#fff"/>
+        </svg>
+        <span>jfl832</span>
+    </div>
+ </div>
+<canvas id="game" tabindex="0"></canvas>
+<div id="hud">
+     ❤️ <span id="hp">100</span>
+     &nbsp;|&nbsp;
+     🔫 <span id="ammo">0</span>
+     &nbsp;|&nbsp;
+     🧟 <span id="score">0</span>
+     &nbsp;|&nbsp;
+     ⛽ <span id="fuel">--</span>
+ </div>
+<button id="pause" onclick="togglePause()">PAUSE</button>
+<div id="help">
+     WASD = MOVE &nbsp; • &nbsp; E = CAR &nbsp; • &nbsp; P = PAUSE
+ </div>
+<div id="message"></div>
+<div id="mobileControls" aria-label="Mobile game controls">
+    <button type="button" id="mobileCustomize" class="mobileEditBtn">CUSTOMIZE</button>
+    <button type="button" id="mobileResetLayout" class="mobileEditBtn">RESET</button>
+
+    <div id="mobileJoystick" class="mobileMovable" aria-label="Movement joystick">
+        <div id="joystickKnob"></div>
+    </div>
+
+    <div class="mobileActions">
+        <button type="button" id="mobileCar" class="mobileControlBtn mobileMovable">CAR</button>
+        <button type="button" id="mobileShoot" class="mobileControlBtn mobileMovable">SHOOT</button>
+        <button type="button" id="mobilePause" class="mobileControlBtn mobileMovable">PAUSE</button>
+    </div>
+</div>
+
+<div id="pauseScreen" class="overlay">
+     <div class="box">
+         <h1>PAUSED</h1>
+         <button id="controlsToggle" type="button" onclick="toggleControlsPanel()" aria-label="Show instructions">INSTRUCTIONS</button>
+         <div id="pauseControls" class="pauseControls">
+             <b>ON FOOT</b><br>
+             WASD / Arrows — Move<br>
+             Mouse click / Space — Shoot<br>
+             E — Enter a nearby car<br><br>
+             <b>IN A CAR</b><br>
+             W / S — Forward / Reverse<br>
+             A / D — Change lane<br>
+             E — Exit car<br><br>
+             <span class="muted">Slow down beside a gas pump to refuel automatically. A large zombie swarm can still hurt you inside a car.</span>
+         </div>
+         <button onclick="togglePause()">RESUME</button>
+         <button onclick="restart()">RESTART</button>
+         <button onclick="returnToMenu()">MAIN MENU</button>
+     </div>
+ </div>
+<div id="deathScreen" class="overlay">
+     <div class="box">
+         <h1>YOU DIED</h1>
+         <p>Score: <b id="finalScore">0</b></p>
+         <p>Time: <b id="finalTime">0:00</b></p>
+         <button onclick="restart()">RESTART</button>
+         <button onclick="returnToMenu()">MAIN MENU</button>
+     </div>
+ </div>
+<script>
+ "use strict";
+/* =========================================================
+    SETUP
+ ========================================================= */
+const canvas=document.getElementById("game");
+ const ctx=canvas.getContext("2d");
+const preview=document.getElementById("preview");
+ const pctx=preview.getContext("2d");
+let W=window.innerWidth;
+ let H=window.innerHeight;
+function resize(){
+     W=window.innerWidth;
+     H=window.innerHeight;
+     canvas.width=W;
+     canvas.height=H;
+ }
+resize();
+ window.addEventListener("resize",resize);
+/* =========================================================
+    CHARACTERS
+ ========================================================= */
+const characters={
+    maya:{
+         name:"Maya",
+         health:90,
+         speed:4.5,
+         power:1,
+         radius:13,
+        shirt:"#6e1823",
+         pants:"#25272a",
+         hair:"#241b1a",
+         eyes:"#5a3824",
+        female:true
+     },
+    marcus:{
+         name:"Marcus",
+         health:115,
+         speed:4.2,
+         power:1.12,
+         radius:15,
+        shirt:"#245b91",
+         pants:"#24272a",
+         hair:"#171719",
+         eyes:"#527247",
+        female:false
+     },
+    victor:{
+         name:"Victor",
+         health:165,
+         speed:3.25,
+         power:1.45,
+         radius:17,
+        shirt:"#70503c",
+         pants:"#252729",
+         hair:"#34251e",
+         eyes:"#45658a",
+        female:false,
+         beard:true
+     }
+};
+let selectedCharacter="maya";
+/* =========================================================
+    DIFFICULTIES
+ ========================================================= */
+const difficulties={
+    easy:{
+         startingZombies:6,
+         baseMax:16,
+         zombieSpeed:.42,
+         zombieHealth:2,
+         spawnRate:.010,
+         contactDamage:7,
+         ammo:125,
+         ammoDrop:[8,16],
+         escalation:45
+     },
+    normal:{
+         startingZombies:5,
+         baseMax:15,
+         zombieSpeed:.10,
+         zombieHealth:2,
+         spawnRate:.019,
+         contactDamage:9,
+         ammo:105,
+         ammoDrop:[6,13],
+         escalation:35
+     },
+    hard:{
+         startingZombies:14,
+         baseMax:34,
+         zombieSpeed:.63,
+         zombieHealth:3,
+         spawnRate:.030,
+         contactDamage:12,
+         ammo:90,
+         ammoDrop:[5,10],
+         escalation:28
+     },
+    impossible:{
+         startingZombies:55,
+         baseMax:110,
+         zombieSpeed:1.35,
+         zombieHealth:3,
+         spawnRate:.18,
+         contactDamage:16,
+         ammo:115,
+         ammoDrop:[4,8],
+         escalation:18
+     }
+};
+let difficulty="normal";
+ let locationName="city";
+/* =========================================================
+    GAME OBJECTS
+ ========================================================= */
+let player=null;
+let zombies=[];
+ let animals=[];
+ let bullets=[];
+ let pickups=[];
+let buildings=[];
+ let skyscrapers=[];
+ let trees=[];
+ let lamps=[];
+ let cars=[];
+let gasStations=[];
+let keys={};
+let mouseX=W/2;
+ let mouseY=H/2;
+let running=false;
+ let paused=false;
+let gameSessionId=0;
+let score=0;
+ let survivalTime=0;
+ let lastTime=0;
+let animalTimer=0;
+let worldScroll=0;
+let gasTravelSinceLast=0;
+let nextGasStationTravel=2600+Math.random()*2200;
+let drivingCar=null;
+let carVelocity=0;
+let lastHudRender=0;
+/* =========================================================
+    CHARACTER SELECT
+ ========================================================= */
+function chooseCharacter(name){
+    selectedCharacter=name;
+    document.querySelectorAll(".charButtons button")
+         .forEach(button=>button.classList.remove("active"));
+    document.getElementById(name)
+         .classList.add("active");
+    document.getElementById("charName")
+         .textContent=characters[name].name;
+    drawCharacterPreview();
+ }
+chooseCharacter("maya");
+/* =========================================================
+    CHARACTER PREVIEW
+ ========================================================= */
+function drawCharacterPreview(){
+    pctx.clearRect(0,0,190,220);
+    const c=characters[selectedCharacter];
+    const x=95;
+     const bodyWidth=selectedCharacter==="victor"
+         ?48
+         :selectedCharacter==="marcus"
+         ?42
+         :36;
+    const tall=selectedCharacter==="maya"
+         ?0
+         :selectedCharacter==="marcus"
+         ?-6
+         :-10;
+    const skin="#c58c70";
+    /* shadow */
+    pctx.fillStyle="#0007";
+    pctx.beginPath();
+     pctx.ellipse(x,202,42,7,0,0,Math.PI*2);
+     pctx.fill();
+    /* legs */
+    pctx.fillStyle=c.pants;
+    pctx.fillRect(
+         x-bodyWidth*.38,
+         130+tall,
+         bodyWidth*.28,
+         58
+     );
+    pctx.fillRect(
+         x+bodyWidth*.10,
+         130+tall,
+         bodyWidth*.28,
+         58
+     );
+    /* shoes */
+    pctx.fillStyle="#101212";
+    pctx.fillRect(
+         x-bodyWidth*.46,
+         183+tall,
+         bodyWidth*.38,
+         10
+     );
+    pctx.fillRect(
+         x+bodyWidth*.06,
+         183+tall,
+         bodyWidth*.38,
+         10
+     );
+    /* torso */
+    pctx.fillStyle=c.shirt;
+    pctx.beginPath();
+     pctx.roundRect(
+         x-bodyWidth/2,
+         75+tall,
+         bodyWidth,
+         64,
+         7
+     );
+     pctx.fill();
+
+    /* Victor jacket: outer layer only; brown T-shirt stays visible in the center. */
+    if(selectedCharacter==="victor"){
+        const jacket="#2f2a27";
+        pctx.fillStyle=jacket;
+
+        /* left jacket panel */
+        pctx.beginPath();
+        pctx.moveTo(x-bodyWidth/2,78+tall);
+        pctx.lineTo(x-7,87+tall);
+        pctx.lineTo(x-9,138+tall);
+        pctx.lineTo(x-bodyWidth/2,138+tall);
+        pctx.closePath();
+        pctx.fill();
+
+        /* right jacket panel */
+        pctx.beginPath();
+        pctx.moveTo(x+bodyWidth/2,78+tall);
+        pctx.lineTo(x+7,87+tall);
+        pctx.lineTo(x+9,138+tall);
+        pctx.lineTo(x+bodyWidth/2,138+tall);
+        pctx.closePath();
+        pctx.fill();
+
+        /* lapels */
+        pctx.fillStyle="#49403a";
+        pctx.beginPath();
+        pctx.moveTo(x-bodyWidth/2+4,77+tall);
+        pctx.lineTo(x-5,84+tall);
+        pctx.lineTo(x-10,103+tall);
+        pctx.lineTo(x-18,87+tall);
+        pctx.closePath();
+        pctx.fill();
+
+        pctx.beginPath();
+        pctx.moveTo(x+bodyWidth/2-4,77+tall);
+        pctx.lineTo(x+5,84+tall);
+        pctx.lineTo(x+10,103+tall);
+        pctx.lineTo(x+18,87+tall);
+        pctx.closePath();
+        pctx.fill();
+    }
+
+    /* hoodie collar for Marcus */
+    if(selectedCharacter==="marcus"){
+        pctx.strokeStyle="#172c42";
+         pctx.lineWidth=5;
+        pctx.beginPath();
+         pctx.arc(x,80+tall,16,0,Math.PI);
+         pctx.stroke();
+     }
+    /* arms */
+    pctx.fillStyle=selectedCharacter==="victor" ? "#2f2a27" : c.shirt;
+    pctx.fillRect(
+         x-bodyWidth/2-11,
+         82+tall,
+         10,
+         52
+     );
+    pctx.fillRect(
+         x+bodyWidth/2+1,
+         82+tall,
+         10,
+         52
+     );
+    /* hands */
+    pctx.fillStyle=skin;
+    pctx.beginPath();
+     pctx.arc(x-bodyWidth/2-6,139+tall,6,0,Math.PI*2);
+     pctx.arc(x+bodyWidth/2+6,139+tall,6,0,Math.PI*2);
+     pctx.fill();
+    /* neck */
+    pctx.fillRect(
+         x-7,
+         62+tall,
+         14,
+         18
+     );
+    /* ears */
+    pctx.beginPath();
+     pctx.ellipse(x-18,42+tall,6,8,0,0,Math.PI*2);
+     pctx.ellipse(x+18,42+tall,6,8,0,0,Math.PI*2);
+     pctx.fill();
+    /* head */
+    pctx.fillStyle=skin;
+    pctx.beginPath();
+     pctx.roundRect(
+         x-17,
+         20+tall,
+         34,
+         45,
+         12
+     );
+     pctx.fill();
+    /* hair */
+    pctx.fillStyle=c.hair;
+    pctx.beginPath();
+    if(selectedCharacter==="maya"){
+        /* Softer layered shoulder-length hair with a side part. */
+        pctx.beginPath();
+        pctx.moveTo(x-21,44+tall);
+        pctx.quadraticCurveTo(x-22,18+tall,x-7,10+tall);
+        pctx.quadraticCurveTo(x+4,3+tall,x+18,16+tall);
+        pctx.quadraticCurveTo(x+23,26+tall,x+20,49+tall);
+        pctx.quadraticCurveTo(x+17,67+tall,x+13,82+tall);
+        pctx.lineTo(x+7,74+tall);
+        pctx.quadraticCurveTo(x+11,53+tall,x+10,35+tall);
+        pctx.quadraticCurveTo(x+2,29+tall,x-5,28+tall);
+        pctx.quadraticCurveTo(x-12,31+tall,x-13,48+tall);
+        pctx.quadraticCurveTo(x-14,64+tall,x-10,80+tall);
+        pctx.lineTo(x-17,85+tall);
+        pctx.quadraticCurveTo(x-23,65+tall,x-21,44+tall);
+        pctx.closePath();
+        pctx.fill();
+        /* Side-swept fringe. */
+        pctx.beginPath();
+        pctx.moveTo(x-15,23+tall);
+        pctx.quadraticCurveTo(x-2,12+tall,x+13,21+tall);
+        pctx.quadraticCurveTo(x+2,23+tall,x-7,34+tall);
+        pctx.closePath();
+        pctx.fill();
+    }else{
+        pctx.beginPath();
+         pctx.moveTo(x-18,36+tall);
+         pctx.lineTo(x-15,15+tall);
+         pctx.quadraticCurveTo(
+             x,
+             4+tall,
+             x+17,
+             15+tall
+         );
+         pctx.lineTo(x+18,36+tall);
+         pctx.lineTo(x+8,28+tall);
+         pctx.lineTo(x-10,29+tall);
+         pctx.closePath();
+         pctx.fill();
+     }
+    /* eyes - smaller and human */
+    pctx.fillStyle=c.eyes;
+    pctx.beginPath();
+     pctx.ellipse(x-7,42+tall,3.5,2.8,0,0,Math.PI*2);
+     pctx.ellipse(x+7,42+tall,3.5,2.8,0,0,Math.PI*2);
+     pctx.fill();
+    /* pupils */
+    pctx.fillStyle="#111";
+    pctx.beginPath();
+     pctx.arc(x-7,42+tall,1.3,0,Math.PI*2);
+     pctx.arc(x+7,42+tall,1.3,0,Math.PI*2);
+     pctx.fill();
+    /* eyebrows */
+    pctx.strokeStyle="#3a2923";
+     pctx.lineWidth=2;
+    pctx.beginPath();
+     pctx.moveTo(x-11,35+tall);
+     pctx.lineTo(x-3,34+tall);
+     pctx.moveTo(x+3,34+tall);
+     pctx.lineTo(x+11,35+tall);
+     pctx.stroke();
+    /* nose */
+    pctx.strokeStyle="#865b4a";
+     pctx.lineWidth=1.5;
+    pctx.beginPath();
+     pctx.moveTo(x,43+tall);
+     pctx.lineTo(x-1,50+tall);
+     pctx.lineTo(x+3,51+tall);
+     pctx.stroke();
+    /* mouth */
+    pctx.strokeStyle="#633e39";
+     pctx.beginPath();
+    if(c.female){
+         pctx.moveTo(x-4,55+tall);
+         pctx.quadraticCurveTo(x,54+tall,x+4,55+tall);
+     }else{
+         pctx.moveTo(x-5,54+tall);
+         pctx.lineTo(x+5,54+tall);
+     }
+    pctx.stroke();
+    /* Victor beard */
+    if(c.beard){
+        pctx.fillStyle="#34251e";
+        pctx.beginPath();
+         pctx.moveTo(x-13,50+tall);
+         pctx.lineTo(x-9,62+tall);
+         pctx.lineTo(x,67+tall);
+         pctx.lineTo(x+9,62+tall);
+         pctx.lineTo(x+13,50+tall);
+         pctx.lineTo(x+7,55+tall);
+         pctx.lineTo(x-7,55+tall);
+         pctx.closePath();
+         pctx.fill();
+     }
+/* Marcus hoodie pocket */
+    if(selectedCharacter==="marcus"){
+        pctx.strokeStyle="#163d65";
+         pctx.lineWidth=3;
+        pctx.beginPath();
+         pctx.moveTo(x-14,121+tall);
+         pctx.quadraticCurveTo(
+             x,
+             132+tall,
+             x+14,
+             121+tall
+         );
+         pctx.stroke();
+     }
+ }
+/* =========================================================
+    MAP CREATION
+ ========================================================= */
+function roadCarOverlapsGasStation(x,w){
+    // Reserve the full station frontage and fueling bays so parked vehicles
+    // never appear across the pumps, driveway, or store entrance.
+    for(const g of gasStations){
+        const left=g.x-70;
+        const right=g.x+g.w+570;
+        if(x+w/2>left && x-w/2<right) return true;
+    }
+    return false;
+}
+
+function randomRoadCarPosition(w,h,minX,maxX,ignoreCar=null){
+    const roadY=H*.43;
+    const roadH=H*.30;
+    // Two true roadside parking bands: one tight to the upper edge and one
+    // tight to the lower edge. The lower/right-side band used to sit too
+    // close to the center line, so use the same small edge clearance on both.
+    const edgePad=4;
+    const upperY=roadY+edgePad+h/2;
+    const lowerY=roadY+roadH-edgePad-h/2;
+    // Keep cars separated horizontally even when they are in opposite lanes.
+    // This prevents the "one car directly above another" stacked look.
+    const minSameBandGap=255;
+    const minCrossBandGap=255;
+
+    for(let attempt=0;attempt<320;attempt++){
+        const x=minX+Math.random()*Math.max(1,maxX-minX);
+        const band=Math.random()<.5?0:1;
+        const y=(band===0?upperY:lowerY)+(Math.random()*6-3);
+        if(player && Math.hypot(x-player.x,y-player.y)<150) continue;
+        if(roadCarOverlapsGasStation(x,w)) continue;
+
+        let tooClose=false;
+        for(const other of cars){
+            if(other===ignoreCar) continue;
+            const xGap=Math.abs(x-other.x);
+            const sameBand=Math.abs(y-other.y)<roadH*.28;
+            const requiredGap=sameBand?minSameBandGap:minCrossBandGap;
+            if(xGap<requiredGap){
+                tooClose=true;
+                break;
+            }
+        }
+        if(tooClose) continue;
+        return {x,y};
+    }
+
+    // Fallback still respects the no-stacking rule. If the requested window is
+    // crowded, place the car farther to the right instead of putting it on top
+    // of another car.
+    const band=(cars.filter(c=>c!==ignoreCar).length%2);
+    const y=band===0?upperY:lowerY;
+    for(let x=minX+70;x<=maxX-70;x+=275){
+        let clear=true;
+        for(const other of cars){
+            if(other===ignoreCar) continue;
+            if(Math.abs(x-other.x)<255){ clear=false; break; }
+        }
+        if(clear && !roadCarOverlapsGasStation(x,w)) return {x,y};
+    }
+    const others=cars.filter(c=>c!==ignoreCar);
+    const furthest=others.length
+        ? Math.max(...others.map(c=>c.x+c.w/2))
+        : maxX;
+    let fallbackX=Math.max(maxX+120,furthest+300);
+    for(const g of gasStations){
+        const left=g.x-70;
+        const right=g.x+g.w+570;
+        if(fallbackX+w/2>left && fallbackX-w/2<right) fallbackX=right+w/2+90;
+    }
+    return {x:fallbackX,y:y};
+}
+
+function lampTooCloseToGasStation(x){
+    // Reserve the complete station frontage, sign and storage-tank area.
+    return gasStations.some(g=>x>g.x-180 && x<g.x+g.w+610);
+}
+
+function clearLampsAroundGasStation(g){
+    const left=g.x-180;
+    const right=g.x+g.w+610;
+    lamps=lamps.filter(l=>l.x<left || l.x>right);
+}
+
+function lampSpotIsClear(x,side){
+    if(lampTooCloseToGasStation(x)) return false;
+    const roadY=H*.43;
+    const roadH=H*.30;
+    const y=side===0 ? roadY-34 : roadY+roadH+34;
+    // Full visual envelope of pole + lamp head.
+    const left=x-30, right=x+18, top=y-76, bottom=y+8;
+    const overlapsRect=o=>right>o.x && left<o.x+o.w && bottom>o.y && top<o.y+o.h;
+    const overlapsHouseWithRoof=b=>{
+        // Hard roof clearance: roadside scenery is never allowed to share
+        // horizontal space with a house/roof silhouette. This is deliberately
+        // stricter than a normal rectangle collision so crowns and lamp arms
+        // cannot visually cut across sloped roofs.
+        const roofPad=b.roof?78:34;
+        const safety=34;
+        const bx=b.x-roofPad-safety;
+        const br=b.x+b.w+roofPad+safety;
+        return right>bx && left<br;
+    };
+    for(const b of buildings) if(overlapsHouseWithRoof(b)) return false;
+    // In Abandoned City the upper lamps belong to the boulevard directly in
+    // front of the skyline, so skyscrapers are allowed behind them.
+    if(!(locationName==="city" && side===0)){
+        for(const sk of skyscrapers) if(overlapsRect(sk)) return false;
+    }
+    for(const t of trees){
+        if(!t.roadside) continue;
+        if(Math.abs(t.x-x)<72 && t.roadsideSide===side) return false;
+    }
+    return true;
+}
+
+function cityGapSlots(items, roofPad=0){
+    const sorted=[...items].sort((a,b)=>a.x-b.x);
+    const slots=[];
+    for(let i=0;i<sorted.length-1;i++){
+        const a=sorted[i], b=sorted[i+1];
+        const left=a.x+a.w+roofPad;
+        const right=b.x-roofPad;
+        const gap=right-left;
+        if(gap<16) continue;
+        slots.push({
+            x:(left+right)/2,
+            gap,
+            index:i,
+            seq:(a.patternSeq ?? i),
+            left,
+            right
+        });
+    }
+    return slots;
+}
+
+function createRoadLampPattern(targetTotal=24){
+    const roadY=H*.43;
+    const roadH=H*.30;
+    lamps=[];
+
+    if(["city","rain","snow"].includes(locationName)){
+        // Every road-map lamp is derived from a REAL gap between neighboring structures.
+        // City: top gaps are skyscrapers. Rain/Snow: top gaps are houses.
+        const topItems=locationName==="city"
+            ? skyscrapers
+            : buildings.filter(b=>b.y<roadY);
+        const bottomItems=buildings.filter(b=>b.y>roadY);
+        const topPad=locationName==="city"?4:18;
+        const bottomPad=18;
+        const topSlots=cityGapSlots(topItems,topPad);
+        const bottomSlots=cityGapSlots(bottomItems,bottomPad);
+
+        for(const slot of topSlots){
+            if(slot.seq%2!==0) continue;
+            if(lampTooCloseToGasStation(slot.x)) continue;
+            const compactScale=locationName==="city"
+                ? Math.max(.58,Math.min(.78,(slot.gap-6)/42))
+                : Math.max(.82,Math.min(1.05,(slot.gap-8)/58));
+            lamps.push({
+                x:slot.x,
+                y:roadY-18,
+                side:0,
+                patternSlot:slot.seq,
+                citySkyline:locationName==="city",
+                cityGap:true,
+                roadGap:true,
+                compact:true,
+                compactScale
+            });
+        }
+
+        for(const slot of bottomSlots){
+            if(slot.seq%2===0) continue;
+            if(lampTooCloseToGasStation(slot.x)) continue;
+            const compactScale=locationName==="city"
+                ? Math.max(.88,Math.min(1.08,(slot.gap-18)/72))
+                : Math.max(.84,Math.min(1.08,(slot.gap-12)/60));
+            lamps.push({
+                x:slot.x,
+                y:roadY+roadH+72,
+                side:1,
+                patternSlot:slot.seq,
+                cityHouse:locationName==="city",
+                cityHouseGap:true,
+                cityGap:true,
+                roadGap:true,
+                compact:true,
+                compactScale
+            });
+        }
+        return;
+    }
+
+    const spacing=180;
+    const desiredPerSide=Math.max(1,Math.ceil(targetTotal/2));
+    for(const side of [0,1]){
+        const y=side===0?roadY-34:roadY+roadH+34;
+        let made=0;
+        let slot=0;
+        for(let x=75; x<W+2200 && made<desiredPerSide; x+=spacing){
+            if(lampSpotIsClear(x,side)){
+                lamps.push({x,y,side,patternSlot:slot});
+                made++;
+            }
+            slot++;
+        }
+    }
+}
+
+function makeGasStation(x){
+    const roadY=H*.43;
+    const roadH=H*.30;
+    // Foreground side only: zombies can reach the forecourt/store.
+    const side=1;
+    const w=250;
+    const h=118;
+    const y=roadY+roadH+34;
+    return {
+        x:x, y:y, w:w, h:h, side:side,
+        pumpX:x+w*.44,
+        pumpY:roadY+roadH-22,
+        pump2X:x+w*.68,
+        // Large pickup tank sits clearly to the RIGHT of the station.
+        tankX:x+w+175,
+        tankY:y+12,
+        // Tall roadside sign is clearly RIGHT of the tank.
+        signX:(x+w+175)+145,
+        price:(1.45+Math.random()*.35).toFixed(2),
+        fuelStock:160+Math.floor(Math.random()*141),
+        maxFuelStock:300,
+        tankBonusUsed:false
+    };
+}
+
+
+function reserveGasStationSpace(g){
+    // Keep foreground houses away from the station so the store/canopy never
+    // occupies the same world space as a generated building.
+    const left=g.x-90;
+    const right=g.x+g.w+570;
+    let cursor=right;
+    const foreground=buildings
+        .filter(b=>b.y>H*.43)
+        .sort((a,b)=>a.x-b.x);
+
+    for(const b of foreground){
+        const overlaps=b.x+b.w>left && b.x<right;
+        if(overlaps){
+            b.x=cursor+50+Math.random()*55;
+            cursor=b.x+b.w;
+        }
+    }
+    // Trees also respect the station forecourt and tank area.
+    for(const t of trees){
+        if(!t.roadside) continue;
+        if(t.x+t.r>left && t.x-t.r<right){
+            t.x=right+110+Math.random()*220;
+        }
+    }
+}
+
+function positionRecycledBuildingAwayFromStations(b,desiredX){
+    let x=desiredX;
+    for(const g of gasStations){
+        const left=g.x-90;
+        const right=g.x+g.w+570;
+        if(x+b.w>left && x<right){
+            x=right+60+Math.random()*60;
+        }
+    }
+    return x;
+}
+
+
+const vehicleColors=[
+    "#d63f3f", // red
+    "#2474d2", // blue
+    "#f0b52b", // yellow
+    "#2d9b61", // green
+    "#7d56c2", // purple
+    "#e86d2f", // orange
+    "#e7e7e2", // white
+    "#24282d", // black
+    "#87929b", // silver
+    "#8e4e35", // brown
+    "#36a6ad", // teal
+    "#c84c83"  // pink/magenta
+];
+function randomVehicleColor(){
+    return vehicleColors[Math.floor(Math.random()*vehicleColors.length)];
+}
+function treeSpotIsClear(x,r=16,yOverride=null,sideOverride=null){
+    const roadY=H*.43;
+    const roadH=H*.30;
+    const side=sideOverride==null?1:sideOverride;
+    const y=yOverride==null?(side===0?roadY-38:roadY+roadH+38):yOverride;
+    // Include crown + square planter, not just the trunk.
+    const left=x-34, right=x+34, top=y-62, bottom=y+34;
+    const overlapsRect=o=>right>o.x && left<o.x+o.w && bottom>o.y && top<o.y+o.h;
+    const overlapsHouseWithRoof=b=>{
+        // Hard roof clearance: a tree crown/planter may not share horizontal
+        // space with the full house + roof overhang at all. This prevents the
+        // persistent visual roof overlap that remained with 2-D box tests.
+        const roofPad=b.roof?88:38;
+        const safety=40;
+        const bx=b.x-roofPad-safety;
+        const br=b.x+b.w+roofPad+safety;
+        return right>bx && left<br;
+    };
+    for(const b of buildings) if(overlapsHouseWithRoof(b)) return false;
+    // In Abandoned City the upper lamps belong to the boulevard directly in
+    // front of the skyline, so skyscrapers are allowed behind them.
+    if(!(locationName==="city" && side===0)){
+        for(const sk of skyscrapers) if(overlapsRect(sk)) return false;
+    }
+    for(const g of gasStations){
+        const gl=g.x-130, gr=g.x+g.w+590;
+        if(right>gl && left<gr) return false;
+    }
+    for(const t of trees){
+        if(!t.roadside) continue;
+        // Larger visual spacing keeps crowns and square planters separate.
+        if(Math.abs(t.x-x)<150 && Math.abs(t.y-y)<115) return false;
+    }
+    for(const l of lamps){
+        if(l.side===side && Math.abs(l.x-x)<72) return false;
+    }
+    return true;
+}
+function addRoadsideTrees(count=16,startX=25,endX=W-25){
+    if(!["city","rain","snow"].includes(locationName)) return;
+    const roadY=H*.43;
+    const roadH=H*.30;
+
+    if(["city","rain","snow"].includes(locationName)){
+        const topItems=locationName==="city"
+            ? skyscrapers
+            : buildings.filter(b=>b.y<roadY);
+        const bottomItems=buildings.filter(b=>b.y>roadY);
+        const topSlots=cityGapSlots(topItems,locationName==="city"?4:18);
+        const bottomSlots=cityGapSlots(bottomItems,18);
+
+        // Trees use the opposite gaps from lamps: light-tree-light-tree.
+        for(const slot of topSlots){
+            if(slot.seq%2===0) continue;
+            if(lampTooCloseToGasStation(slot.x)) continue;
+            const r=locationName==="city"
+                ? Math.max(9,Math.min(12,(slot.gap-4)*.30))
+                : Math.max(15,Math.min(20,(slot.gap-8)*.31));
+            trees.push({
+                x:slot.x,
+                y:locationName==="city" ? roadY-40 : roadY-68,
+                r,
+                type:slot.seq%2,
+                roadside:true,
+                planter:true,
+                roadsideSide:0,
+                patternIndex:slot.seq,
+                citySkyline:locationName==="city",
+                cityGap:true,
+                roadGap:true
+            });
+        }
+
+        for(const slot of bottomSlots){
+            if(slot.seq%2!==0) continue;
+            if(lampTooCloseToGasStation(slot.x)) continue;
+            const r=locationName==="city"
+                ? Math.max(16,Math.min(21,(slot.gap-22)*.24))
+                : Math.max(16,Math.min(21,(slot.gap-16)*.29));
+            trees.push({
+                x:slot.x,
+                y:locationName==="city" ? roadY+roadH+44 : roadY+roadH+68,
+                r,
+                type:slot.seq%2,
+                roadside:true,
+                planter:true,
+                roadsideSide:1,
+                patternIndex:slot.seq,
+                cityHouse:locationName==="city",
+                cityHouseGap:true,
+                cityGap:true,
+                roadGap:true
+            });
+        }
+        return;
+    }
+}
+
+function refreshCityGapScenery(){
+    if(!["city","rain","snow"].includes(locationName)) return;
+    // Rebuild gap scenery only after a structure recycles.
+    // Every object is regenerated from the actual current house/tower gaps.
+    trees=trees.filter(t=>!t.cityGap);
+    lamps=lamps.filter(l=>!l.cityGap);
+    createRoadLampPattern(28);
+    addRoadsideTrees(24);
+}
+
+function recycleRoadsideTree(t){
+    if(!t.roadside) return;
+    const roadY=H*.43, roadH=H*.30;
+    const side=t.roadsideSide===0?0:1;
+    const y=(locationName==="city" && t.cityHouse)
+        ? roadY+roadH+44
+        : (locationName==="city"
+            ? (side===0?roadY-40:roadY+roadH+44)
+            : (side===0?roadY-68:roadY+roadH+68));
+    const spacing=180;
+    const sameSide=trees.filter(x=>x!==t&&x.roadside&&x.roadsideSide===side);
+    const furthest=Math.max(W+100,...(sameSide.length?sameSide.map(x=>x.x):[W+100]));
+    let base;
+    if(locationName==="city" && side===0){
+        // Keep the city tree phase halfway between skyline lamps (70 + n*180).
+        base=160 + Math.ceil((furthest-160+spacing)/spacing)*spacing;
+    }else if(locationName==="city" && t.cityHouse){
+        // House-side trees recycle into the next valid gap between homes.
+        const foreground=buildings.filter(b=>b.y>roadY).sort((a,b)=>a.x-b.x);
+        const candidates=[];
+        for(let i=0;i<foreground.length-1;i++){
+            const a=foreground[i], b=foreground[i+1];
+            const gs=a.x+a.w+20, ge=b.x-20;
+            if(ge-gs>=72) candidates.push(gs+(ge-gs)*.30);
+        }
+        base=candidates.filter(x=>x>furthest+40 && !lampTooCloseToGasStation(x)).sort((a,b)=>a-b)[0];
+        if(base==null){
+            const last=foreground[foreground.length-1];
+            base=(last?last.x+last.w:furthest)+145;
+        }
+    }else{
+        base=Math.ceil((furthest+spacing)/spacing)*spacing + spacing/2;
+    }
+
+    for(let attempt=0;attempt<28;attempt++,base+=spacing){
+        const clear=(locationName==="city" && side===0)
+            ? !lampTooCloseToGasStation(base) && !trees.some(o=>o!==t&&o.roadside&&o.roadsideSide===0&&Math.abs(o.x-base)<125)
+            : treeSpotIsClear(base,t.r,y,side);
+        if(clear){
+            t.x=base;
+            t.y=y;
+            t.patternIndex+=1;
+            t.type=(t.type+1)%2;
+            t.planter=true;
+            return;
+        }
+    }
+    // Keep it far ahead if every nearby slot is genuinely occupied.
+    t.x=base;
+    t.y=y;
+}
+
+function maybeCreateInitialGasStations(){
+    if(!["city","rain","snow"].includes(locationName)) return;
+    // Guarantee one station a short distance ahead so every road map visibly has one.
+    // Later stations still use the long-distance random timer.
+    gasStations=[];
+    let stationX=Math.max(360,W*.52);
+    if(locationName==="city" && buildings.length){
+        // The city is now prebuilt far ahead. Keep the first station ahead of the
+        // initial neighborhood, not beyond the entire preloaded buffer.
+        stationX=Math.max(stationX,W+1050);
+    }
+    const station=makeGasStation(stationX);
+    gasStations.push(station);
+    reserveGasStationSpace(station);
+    clearLampsAroundGasStation(station);
+}
+
+function autoRefuelAtStation(){
+    if(!drivingCar || !["city","rain","snow"].includes(locationName)) return;
+
+    // A real fueling zone around each pump: pull alongside and slow down.
+    // This is intentionally forgiving so the road-lane position can still reach it.
+    if(Math.abs(carVelocity)>2.2) return;
+
+    let station=null;
+    for(const g of gasStations){
+        const pumps=[g.pumpX,g.pump2X];
+        for(const px of pumps){
+            const inBay=
+                Math.abs(drivingCar.x-px)<72 &&
+                Math.abs(drivingCar.y-g.pumpY)<68;
+            if(inBay){ station=g; break; }
+        }
+        if(station) break;
+    }
+    if(!station || station.fuelStock<=0) return;
+
+    if(drivingCar.maxFuel==null) drivingCar.maxFuel=100;
+    if(drivingCar.fuel==null) drivingCar.fuel=0;
+
+    const needed=Math.max(0,drivingCar.maxFuel-drivingCar.fuel);
+    if(needed<=0) return;
+
+    // Faster visible refill while parked/creeping in the bay.
+    const amount=Math.min(0.75,needed,station.fuelStock);
+    drivingCar.fuel+=amount;
+    station.fuelStock-=amount;
+}
+
+function collectGasTankBonus(){
+    if(!drivingCar || !["city","rain","snow"].includes(locationName)) return;
+    for(const g of gasStations){
+        if(g.tankBonusUsed) continue;
+        const nearTank =
+            Math.abs(drivingCar.x-g.tankX)<105 &&
+            Math.abs(drivingCar.y-(g.tankY+15))<95;
+        if(!nearTank) continue;
+        if(drivingCar.maxFuel==null) drivingCar.maxFuel=100;
+        if(drivingCar.fuel==null) drivingCar.fuel=0;
+        const before=drivingCar.fuel;
+        drivingCar.fuel=Math.min(drivingCar.maxFuel,drivingCar.fuel+40);
+        g.tankBonusUsed=true;
+        const gained=Math.round(drivingCar.fuel-before);
+        showMessage(gained>0?"+"+gained+" GAS":"FUEL TANK USED");
+        break;
+    }
+}
+function refuelAtStation(){
+    autoRefuelAtStation();
+    collectGasTankBonus();
+}
+
+function removeSceneryThatTouchesHouseRoofs(){
+    const houseEnvelope=b=>{
+        const overhang=b.snow?20:18;
+        const roofRise=b.snow?52:46;
+        return {
+            left:b.x-overhang,
+            right:b.x+b.w+overhang,
+            top:b.y-roofRise,
+            bottom:b.y+b.h
+        };
+    };
+    const intersects=(a,b)=>a.right>b.left && a.left<b.right && a.bottom>b.top && a.top<b.bottom;
+    const treeHitsHouse=t=>{
+        const box={left:t.x-32,right:t.x+32,top:t.y-64,bottom:t.y+34};
+        return buildings.some(b=>intersects(box,houseEnvelope(b)));
+    };
+    const lampHitsHouse=l=>{
+        const box={left:l.x-32,right:l.x+22,top:l.y-82,bottom:l.y+10};
+        return buildings.some(b=>intersects(box,houseEnvelope(b)));
+    };
+    // House-gap scenery is generated from the actual roof-to-roof opening,
+    // so do not feed it back through the older broad cleanup rectangle.
+    trees=trees.filter(t=>t.cityGap || t.cityHouseGap || !t.roadside || !treeHitsHouse(t));
+    lamps=lamps.filter(l=>l.cityGap || l.cityHouseGap || !lampHitsHouse(l));
+}
+
+
+function normalizeSuburbHouseSpacing(){
+    if(!["snow","rain"].includes(locationName)) return;
+    const roadY=H*.43;
+    for(const topRow of [true,false]){
+        const row=buildings
+            .filter(b=>(b.y<roadY)===topRow)
+            .sort((a,b)=>a.x-b.x);
+
+        let previous=null;
+        for(const b of row){
+            if(previous){
+                const seq=b.patternSeq ?? 0;
+                const minGap=65+(seq%3)*12;
+                const minX=previous.x+previous.w+minGap;
+                if(b.x<minX) b.x=minX;
+            }
+
+            // Only the foreground row has to clear the gas-station complex.
+            if(!topRow){
+                b.x=positionRecycledBuildingAwayFromStations(b,b.x);
+                if(previous){
+                    const seq=b.patternSeq ?? 0;
+                    const minGap=65+(seq%3)*12;
+                    const minX=previous.x+previous.w+minGap;
+                    if(b.x<minX) b.x=minX;
+                }
+            }
+            previous=b;
+        }
+    }
+}
+
+function createMap(){
+    buildings=[];
+     skyscrapers=[];
+     trees=[];
+     lamps=[];
+     cars=[];
+     gasStations=[];
+    const roadY=H*.43;
+     const roadH=H*.30;
+    if(locationName==="city"){
+        // Keep the original Version-1 skyline shapes, but prebuild a long world buffer
+        // so towers already exist far ahead before the player starts driving.
+        const legacyRoadH=H*.24;
+        const towerShapes=[
+            {w:105,h:210,y:15},{w:120,h:240,y:-10},{w:105,h:205,y:25},{w:130,h:235,y:-20},
+            {w:110,h:215,y:15},{w:125,h:225,y:-15},{w:115,h:205,y:25},{w:135,h:225,y:-10}
+        ];
+        const initialTowerX=[20,155,305,440,605,750,910,1060];
+        for(let i=0;i<towerShapes.length;i++){
+            const s=towerShapes[i];
+            skyscrapers.push({
+                x:initialTowerX[i],y:s.y,w:s.w,h:s.h,
+                legacyCity:true,legacyIndex:i,patternSeq:i
+            });
+        }
+        let towerSeq=skyscrapers.length;
+        while(Math.max(...skyscrapers.map(s=>s.x+s.w))<W+3600){
+            const prev=skyscrapers[skyscrapers.length-1];
+            const idx=towerSeq%towerShapes.length;
+            const s=towerShapes[idx];
+            skyscrapers.push({
+                x:prev.x+prev.w+30,y:s.y,w:s.w,h:s.h,
+                legacyCity:true,legacyIndex:idx,patternSeq:towerSeq
+            });
+            towerSeq++;
+        }
+
+        // City houses keep the same Version-1 shapes, but use wider deliberate gaps.
+        // The old 55-65px spacing made roof overhangs look packed together and left
+        // too little visual room for the alternating tree/light neighborhood pattern.
+        const houseShapes=[
+            {w:190,h:115,dy:60},{w:205,h:120,dy:55},{w:190,h:115,dy:60},
+            {w:210,h:120,dy:55},{w:180,h:115,dy:60}
+        ];
+        let houseX=20;
+        let houseSeq=0;
+        while(houseX<W+3600){
+            const h=houseShapes[houseSeq%houseShapes.length];
+            buildings.push({
+                x:houseX,y:roadY+legacyRoadH+h.dy,w:h.w,h:h.h,
+                roof:true,legacyCity:true,patternSeq:houseSeq
+            });
+            // Give the first visible neighborhood extra breathing room.
+            // After that, continue with the same clean spacing used while driving.
+            const gap=houseSeq<10
+                ? 205+(houseSeq%3)*14
+                : 115+(houseSeq%3)*12;
+            houseX+=h.w+gap;
+            houseSeq++;
+        }
+
+        maybeCreateInitialGasStations();
+
+        // FINAL startup spacing pass. Gas-station reservation may move foreground
+        // houses, so normalize the city row only after that work is finished.
+        {
+            const cityRow=buildings
+                .filter(b=>b.legacyCity)
+                .sort((a,b)=>a.x-b.x);
+            let previous=null;
+            for(const b of cityRow){
+                if(previous){
+                    const seq=b.patternSeq ?? 0;
+                    const minGap=seq<10
+                        ? 205+(seq%3)*14
+                        : 115+(seq%3)*12;
+                    const minX=previous.x+previous.w+minGap;
+                    if(b.x<minX) b.x=minX;
+                }
+                previous=b;
+            }
+        }
+
+        createRoadLampPattern(28);
+        addRoadsideTrees(24);
+        removeSceneryThatTouchesHouseRoofs();
+
+        for(let i=0;i<4;i++){
+            const guaranteedKinds=["supercar","supercar","suv","sedan"];
+            const car={kind:guaranteedKinds[i],color:randomVehicleColor(),type:Math.floor(Math.random()*4),rotation:0,maxFuel:100,fuel:5+Math.random()*15};
+            applyVehicleDimensions(car);
+            const pos=randomRoadCarPosition(car.w,car.h,Math.max(70,W*.70),W-70,null);
+            if(!pos) continue;
+            car.x=pos.x; car.y=pos.y;
+            cars.push(car);
+        }
+    }
+
+    if(locationName==="snow"){
+        // Same neighborhood rhythm as Abandoned City: house width + deliberate gap.
+        // No fixed-grid crowding, and scenery is generated only from real gaps.
+        const topY=Math.max(18,roadY-150);
+        const bottomY=roadY+roadH+60;
+        const worldEnd=W+3600;
+        const houseShapes=[
+            {w:190,h:115},{w:205,h:120},{w:190,h:115},{w:210,h:120},{w:180,h:115}
+        ];
+
+        let x=20, seq=0;
+        while(x<worldEnd){
+            const shape=houseShapes[seq%houseShapes.length];
+            buildings.push({
+                x,
+                y:topY+(seq%2)*5,
+                w:shape.w,
+                h:shape.h,
+                roof:true,
+                snow:true,
+                burning:Math.random()<0.025,
+                patternSeq:seq
+            });
+            x+=shape.w+65+(seq%3)*12;
+            seq++;
+        }
+
+        x=20; seq=0;
+        while(x<worldEnd){
+            const shape=houseShapes[seq%houseShapes.length];
+            buildings.push({
+                x,
+                y:bottomY+(seq%2)*5,
+                w:shape.w,
+                h:shape.h,
+                roof:true,
+                snow:true,
+                burning:Math.random()<0.025,
+                patternSeq:seq
+            });
+            x+=shape.w+65+(seq%3)*12;
+            seq++;
+        }
+
+        maybeCreateInitialGasStations();
+        normalizeSuburbHouseSpacing();
+        createRoadLampPattern(28);
+        addRoadsideTrees(24);
+        removeSceneryThatTouchesHouseRoofs();
+
+        for(let i=0;i<2;i++){
+            const car={kind:randomVehicleKind(),color:randomVehicleColor(),type:Math.floor(Math.random()*4),rotation:0,maxFuel:100,fuel:5+Math.random()*15};
+            applyVehicleDimensions(car);
+            const pos=randomRoadCarPosition(car.w,car.h,Math.max(70,W*.70),W-70,null);
+            if(!pos) continue;
+            car.x=pos.x; car.y=pos.y;
+            cars.push(car);
+        }
+    }
+
+    if(locationName==="rain"){
+        // Same clean city-style house spacing, without snow.
+        const topY=Math.max(18,roadY-150);
+        const bottomY=roadY+roadH+60;
+        const worldEnd=W+3600;
+        const houseShapes=[
+            {w:190,h:115},{w:205,h:120},{w:190,h:115},{w:210,h:120},{w:180,h:115}
+        ];
+
+        let x=20, seq=0;
+        while(x<worldEnd){
+            const shape=houseShapes[seq%houseShapes.length];
+            buildings.push({
+                x,
+                y:topY+(seq%2)*5,
+                w:shape.w,
+                h:shape.h,
+                roof:true,
+                burning:Math.random()<0.035,
+                patternSeq:seq
+            });
+            x+=shape.w+65+(seq%3)*12;
+            seq++;
+        }
+
+        x=20; seq=0;
+        while(x<worldEnd){
+            const shape=houseShapes[seq%houseShapes.length];
+            buildings.push({
+                x,
+                y:bottomY+(seq%2)*5,
+                w:shape.w,
+                h:shape.h,
+                roof:true,
+                burning:Math.random()<0.035,
+                patternSeq:seq
+            });
+            x+=shape.w+65+(seq%3)*12;
+            seq++;
+        }
+
+        maybeCreateInitialGasStations();
+        normalizeSuburbHouseSpacing();
+        createRoadLampPattern(28);
+        addRoadsideTrees(24);
+        removeSceneryThatTouchesHouseRoofs();
+
+        for(let i=0;i<2;i++){
+            const car={kind:randomVehicleKind(),color:randomVehicleColor(),type:Math.floor(Math.random()*4),rotation:0,maxFuel:100,fuel:5+Math.random()*15};
+            applyVehicleDimensions(car);
+            const pos=randomRoadCarPosition(car.w,car.h,Math.max(70,W*.70),W-70,null);
+            if(!pos) continue;
+            car.x=pos.x; car.y=pos.y;
+            cars.push(car);
+        }
+    }
+
+    if(locationName==="forest"){
+        const positions=[
+             [55,70],[150,145],[270,75],[390,155],
+             [520,80],[660,145],[790,75],[920,150],
+             [1060,70],[1190,145],
+             [80,430],[220,500],[370,425],
+             [530,510],[690,435],[850,505],
+             [1010,430],[1160,510]
+         ];
+        for(const p of positions){
+            trees.push({
+                 x:p[0],
+                 y:p[1],
+                 r:27,
+                 type:Math.random()<.5?0:1
+             });
+         }
+     }
+    // Normalize every road vehicle so all body types are enterable/drivable.
+    for(const car of cars){
+        if(!car.kind) car.kind=randomVehicleKind();
+        applyVehicleDimensions(car);
+        car.rotation=0;
+        car.maxFuel=100;
+        if(car.fuel==null) car.fuel=5+Math.random()*15;
+    }
+
+ }
+/* =========================================================
+    COLLISION
+ ========================================================= */
+function circleRectCollision(x,y,r,b){
+    const closestX=Math.max(b.x,Math.min(x,b.x+b.w));
+     const closestY=Math.max(b.y,Math.min(y,b.y+b.h));
+    return Math.hypot(
+         x-closestX,
+         y-closestY
+     )<r;
+ }
+function blocked(x,y,r){
+    if(x<r || x>W-r || y<r || y>H-r)
+         return true;
+
+    // In all road environments the skyline is scenery only. Keep the player
+    // and enemies on the road/foreground side of the upper sidewalk.
+    if(["city","rain","snow"].includes(locationName)){
+        const roadY=H*.43;
+        if(y-r < roadY-8) return true;
+    }
+    for(const b of buildings){
+        if(circleRectCollision(x,y,r,b))
+             return true;
+     }
+    for(const t of trees){
+        if(Math.hypot(x-t.x,y-t.y)<r+t.r*.72)
+             return true;
+     }
+    for(const l of lamps){
+        if(Math.hypot(x-l.x,y-l.y)<r+5)
+             return true;
+     }
+    for(const c of cars){
+        const dx=x-c.x;
+         const dy=y-c.y;
+        if(
+             Math.abs(dx)<c.w/2+r &&
+             Math.abs(dy)<c.h/2+r
+         ){
+             return true;
+         }
+     }
+    return false;
+ }
+function zombieBlockedByGasStation(x,y,r){
+    // Gas stations are NOT safe zones anymore.
+    // Zombies may enter the forecourt/station area and attack the player there.
+    return false;
+}
+
+function spawnZombie(){
+
+    const d = difficulties[difficulty];
+
+    for(let attempt = 0; attempt < 50; attempt++){
+
+        const x = 50 + Math.random() * (W - 100);
+        const roadY=H*.43;
+        // Road maps use the skyline as background scenery only. Zombies spawn
+        // on the street/foreground in city, rain and snow.
+        const y = ["city","rain","snow"].includes(locationName)
+            ? roadY+22+Math.random()*Math.max(40,H-roadY-55)
+            : 50 + Math.random() * (H - 100);
+
+        if(!blocked(x, y, 15) && !zombieBlockedByGasStation(x,y,15)){
+
+            zombies.push({
+                x: x,
+                y: y,
+                radius: 15,
+                health: d.zombieHealth,
+                maxHealth: d.zombieHealth,
+                speed: d.zombieSpeed,
+                hitFlash: 0
+            });
+
+            return;
+        }
+    }
+}
+
+
+/* =========================================================
+    ANIMALS
+ ========================================================= */
+function spawnPolarBear(){
+    if(locationName!=="snow")return;
+    /* rare */
+    const side=Math.floor(Math.random()*4);
+    let x,y;
+    if(side===0){
+         x=Math.random()*W;
+         y=-60;
+     }else if(side===1){
+         x=W+60;
+         y=Math.random()*H;
+     }else if(side===2){
+         x=Math.random()*W;
+         y=H+60;
+     }else{
+         x=-60;
+         y=Math.random()*H;
+     }
+    animals.push({
+         type:"bear",
+         x:x,
+         y:y,
+         radius:29,
+         health:7,
+         speed:.34,
+         damage:18,
+         hitFlash:0
+     });
+    showMessage("A POLAR BEAR IS NEAR!");
+ }
+function spawnWolfPack(){
+    if(locationName!=="forest" && locationName!=="snow")
+         return;
+    const side=Math.floor(Math.random()*4);
+    let x,y;
+    if(side===0){
+         x=Math.random()*W;
+         y=-80;
+     }else if(side===1){
+         x=W+80;
+         y=Math.random()*H;
+     }else if(side===2){
+         x=Math.random()*W;
+         y=H+80;
+     }else{
+         x=-80;
+         y=Math.random()*H;
+     }
+    for(let i=0;i<3;i++){
+        animals.push({
+             type:"wolf",
+             x:x+i*20-20,
+             y:y+i*12-12,
+             radius:15,
+             health:3,
+             speed:.72+Math.random()*.12,
+             damage:9,
+             hitFlash:0,
+             packOffset:i
+         });
+     }
+    showMessage("WOLF PACK!");
+ }
+/* =========================================================
+    ANIMAL UPDATE
+ ========================================================= */
+function moveAnimal(a){
+    const dx=player.x-a.x;
+     const dy=player.y-a.y;
+    const direct=Math.atan2(dy,dx);
+    const angles=[
+         direct,
+         direct+.35,
+         direct-.35,
+         direct+.7,
+         direct-.7,
+         direct+1.1,
+         direct-1.1
+     ];
+    let best=null;
+     let bestDistance=Infinity;
+    for(const angle of angles){
+        const nx=a.x+Math.cos(angle)*a.speed;
+         const ny=a.y+Math.sin(angle)*a.speed;
+        if(!blocked(nx,ny,a.radius)){
+            const dist=Math.hypot(
+                 player.x-nx,
+                 player.y-ny
+             );
+            if(dist<bestDistance){
+                 bestDistance=dist;
+                 best={x:nx,y:ny};
+             }
+         }
+     }
+    if(best){
+         a.x=best.x;
+         a.y=best.y;
+     }
+ }
+/* =========================================================
+    ZOMBIE PATHING
+ ========================================================= */
+function moveZombie(z){
+    const dx=player.x-z.x;
+     const dy=player.y-z.y;
+    const direct=Math.atan2(dy,dx);
+    /*
+      * Zombies try several angles.
+      * This lets them go around skyscrapers instead
+      * of getting permanently stuck.
+      */
+    const angles=[
+         direct,
+         direct+.20,
+         direct-.20,
+         direct+.45,
+         direct-.45,
+         direct+.75,
+         direct-.75,
+         direct+1.15,
+         direct-1.15,
+         direct+1.55,
+         direct-1.55
+     ];
+    let best=null;
+     let bestDistance=Infinity;
+    for(const angle of angles){
+        const nx=z.x+Math.cos(angle)*z.speed;
+         let ny=z.y+Math.sin(angle)*z.speed;
+        if(["city","rain","snow"].includes(locationName)){
+            const minRoadY=H*.43+18+z.radius;
+            ny=Math.max(minRoadY,ny);
+        }
+        if(!blocked(nx,ny,z.radius) && !zombieBlockedByGasStation(nx,ny,z.radius)){
+            const dist=Math.hypot(
+                 player.x-nx,
+                 player.y-ny
+             );
+            if(dist<bestDistance){
+                bestDistance=dist;
+                best={
+                     x:nx,
+                     y:ny
+                 };
+             }
+         }
+     }
+    if(best){
+        z.x=best.x;
+         z.y=best.y;
+     }
+ }
+/* Check whether the player would collide with the world AFTER it scrolls left.
+   This is the correct collision model for on-foot endless scrolling. */
+function blockedAfterWorldShift(x,y,r,shift){
+    if(y<r || y>H-r) return true;
+    if(["city","rain","snow"].includes(locationName)){
+        const roadY=H*.43;
+        if(y-r < roadY-8) return true;
+    }
+    const shiftedRectCollision=o=>circleRectCollision(x,y,r,{x:o.x-shift,y:o.y,w:o.w,h:o.h});
+    for(const b of buildings) if(shiftedRectCollision(b)) return true;
+    for(const t of trees){
+        if(Math.hypot(x-(t.x-shift),y-t.y)<r+t.r*.72) return true;
+    }
+    for(const l of lamps){
+        if(Math.hypot(x-(l.x-shift),y-l.y)<r+5) return true;
+    }
+    for(const c of cars){
+        const dx=x-(c.x-shift);
+        const dy=y-c.y;
+        if(Math.abs(dx)<c.w/2+r && Math.abs(dy)<c.h/2+r) return true;
+    }
+    return false;
+}
+
+/* =========================================================
+    PLAYER
+ ========================================================= */
+function updatePlayer(){
+    if(!player) return;
+
+    // Side-scrolling driving: cars always face right and never rotate.
+    // W/Up drives right, S/Down reverses left.
+    // A/D (or Left/Right) change lanes vertically so you can pass parked cars.
+    if(drivingCar){
+        let throttle=0;
+        let laneInput=0;
+        if(keys.w || keys.arrowup || keys.KeyW || keys.ArrowUp) throttle+=1;
+        if(keys.s || keys.arrowdown || keys.KeyS || keys.ArrowDown) throttle-=1;
+        if(keys.a || keys.arrowleft || keys.KeyA || keys.ArrowLeft) laneInput-=1;
+        if(keys.d || keys.arrowright || keys.KeyD || keys.ArrowRight) laneInput+=1;
+
+        const maxForward=7.4;
+        const maxReverse=-3.4;
+        const acceleration=.22;
+        const friction=.94;
+        const laneSpeed=4.2;
+
+        if(drivingCar.maxFuel==null) drivingCar.maxFuel=100;
+        if(drivingCar.fuel==null) drivingCar.fuel=5+Math.random()*15;
+
+        if(drivingCar.fuel<=0){
+            drivingCar.fuel=0;
+            carVelocity*=.86;
+            if(Math.abs(carVelocity)<.03) carVelocity=0;
+            if(throttle!==0 && Math.abs(carVelocity)<.08) showMessage("OUT OF GAS — FIND A STATION");
+        }else{
+            if(throttle!==0){
+                carVelocity+=throttle*acceleration;
+            }else{
+                carVelocity*=friction;
+                if(Math.abs(carVelocity)<.03) carVelocity=0;
+            }
+            // Fuel drains only while the car is actually moving.
+            drivingCar.fuel=Math.max(0,drivingCar.fuel-Math.abs(carVelocity)*0.0018);
+        }
+        carVelocity=Math.max(maxReverse,Math.min(maxForward,carVelocity));
+        drivingCar.rotation=0;
+
+        const nx=drivingCar.x+carVelocity;
+        if(!carBlocked(nx,drivingCar.y,drivingCar)){
+            drivingCar.x=nx;
+        }else{
+            carVelocity*=-.18;
+        }
+
+        if(laneInput!==0){
+            const ny=drivingCar.y+laneInput*laneSpeed;
+            if(!carBlocked(drivingCar.x,ny,drivingCar)){
+                drivingCar.y=ny;
+            }
+        }
+
+        player.x=drivingCar.x;
+        player.y=drivingCar.y;
+
+        // Once the car reaches the camera anchor, move the world left instead.
+        if(["city","rain","snow"].includes(locationName) && drivingCar.x>W*.55){
+            const shift=drivingCar.x-W*.55;
+            scrollCityWorld(shift,true);
+        }
+        refuelAtStation();
+        return;
+    }
+
+    let dx=0;
+    let dy=0;
+    if(keys.w || keys.arrowup || keys.KeyW || keys.ArrowUp) dy--;
+    if(keys.s || keys.arrowdown || keys.KeyS || keys.ArrowDown) dy++;
+    if(keys.a || keys.arrowleft || keys.KeyA || keys.ArrowLeft) dx--;
+    if(keys.d || keys.arrowright || keys.KeyD || keys.ArrowRight) dx++;
+    if(dx!==0 || dy!==0){
+        const length=Math.hypot(dx,dy);
+        dx/=length;
+        dy/=length;
+        const roadMap=["city","rain","snow"].includes(locationName);
+        const anchor=W*.55;
+        const stepX=dx*player.speed;
+        const stepY=dy*player.speed;
+
+        // On foot, walking right beyond the camera anchor advances the endless world
+        // instead of trapping the character against the screen edge.
+        if(roadMap && stepX>0 && player.x>=anchor-1){
+            // At the camera anchor the player stays fixed while the world moves.
+            // Test collision against where obstacles will be AFTER that shift.
+            if(!blockedAfterWorldShift(anchor,player.y,player.radius,stepX)){
+                player.x=anchor;
+                scrollCityWorld(stepX,true);
+            }
+        }else{
+            const nx=player.x+stepX;
+            if(!blocked(nx,player.y,player.radius)) player.x=nx;
+        }
+
+        const ny=player.y+stepY;
+        if(!blocked(player.x,ny,player.radius)) player.y=ny;
+    }
+
+    player.x=Math.max(player.radius,Math.min(W-player.radius,player.x));
+    player.y=Math.max(player.radius,Math.min(H-player.radius,player.y));
+
+    for(let i=pickups.length-1;i>=0;i--){
+        const p=pickups[i];
+        if(Math.hypot(player.x-p.x,player.y-p.y)<player.radius+13){
+            player.ammo+=p.amount;
+            showMessage("+"+p.amount+" AMMO");
+            pickups.splice(i,1);
+        }
+    }
+}
+
+function scrollCityWorld(shift,keepPlayer=false){
+    if(shift<=0) return;
+    worldScroll+=shift;
+    gasTravelSinceLast+=shift;
+
+    const shiftList=list=>{
+        for(const o of list) o.x-=shift;
+    };
+    shiftList(skyscrapers);
+    shiftList(buildings);
+    shiftList(trees);
+    shiftList(lamps);
+    shiftList(cars);
+    // A station is one world object. Move the store AND every interactive/
+    // decorative child coordinate together so later stations keep working.
+    for(const g of gasStations){
+        g.x-=shift;
+        g.pumpX-=shift;
+        g.pump2X-=shift;
+        g.tankX-=shift;
+        g.signX-=shift;
+    }
+    shiftList(zombies);
+    shiftList(animals);
+    shiftList(bullets);
+    shiftList(pickups);
+    if(!keepPlayer) player.x-=shift;
+
+    recycleCityObjects();
+}
+
+function recycleCityObjects(){
+    if(!["city","rain","snow"].includes(locationName)) return;
+    const roadY=H*.43;
+    const roadH=H*.30;
+
+    // Structures are maintained several screens ahead. Recycling therefore happens
+    // far away from the visible play area instead of creating scenery at the edge.
+    let roadStructureRecycled=false;
+
+    if(locationName==="city"){
+        for(const s of skyscrapers){
+            if(s.x+s.w<-120){
+                const maxX=Math.max(...skyscrapers.map(t=>t.x+t.w));
+                const legacyShapes=[
+                    {w:105,h:210,y:15},{w:120,h:240,y:-10},{w:105,h:205,y:25},{w:130,h:235,y:-20},
+                    {w:110,h:215,y:15},{w:125,h:225,y:-15},{w:115,h:205,y:25},{w:135,h:225,y:-10}
+                ];
+                const nextSeq=Math.max(-1,...skyscrapers.filter(t=>t!==s).map(t=>t.patternSeq ?? -1))+1;
+                const idx=nextSeq%legacyShapes.length;
+                const shape=legacyShapes[idx];
+                s.w=shape.w;
+                s.h=shape.h;
+                s.x=maxX+30;
+                s.y=shape.y;
+                s.legacyIndex=idx;
+                s.patternSeq=nextSeq;
+                s.legacyCity=true;
+                s.burning=Math.random()<0.055;
+                roadStructureRecycled=true;
+            }
+        }
+    }
+
+    for(const b of buildings){
+        if(b.x+b.w<-150){
+            const topRow=b.y<roadY;
+            const sameRow=buildings.filter(t=>t!==b && (t.y<roadY)===topRow);
+            const maxX=Math.max(W+2600,...sameRow.map(t=>t.x+t.w));
+            const nextSeq=Math.max(-1,...sameRow.map(t=>t.patternSeq ?? -1))+1;
+            const gap=locationName==="city"
+                ? 115+(nextSeq%3)*12
+                : 65+(nextSeq%3)*12;
+            const desiredX=maxX+gap;
+            b.x=positionRecycledBuildingAwayFromStations(b,desiredX);
+            b.patternSeq=nextSeq;
+            b.burning=Math.random()<(locationName==="snow"?.025:.035);
+            roadStructureRecycled=true;
+        }
+    }
+
+    if(roadStructureRecycled) refreshCityGapScenery();
+
+    // Gap scenery is regenerated from structures, so it is never independently
+    // recycled into a mismatched position.
+    for(const t of trees){
+        if(t.cityGap) continue;
+        if(t.roadside && t.x+t.r<-100){
+            recycleRoadsideTree(t);
+        }
+    }
+
+    for(const l of lamps){
+        if(l.cityGap) continue;
+        if(l.x<-80){
+            const sameSide=lamps.filter(t=>t!==l && t.side===l.side && !t.cityGap);
+            const maxX=Math.max(W,...(sameSide.length?sameSide.map(t=>t.x):[W]));
+            let nextX=Math.ceil((maxX+180)/180)*180;
+            for(let tries=0;tries<30 && !lampSpotIsClear(nextX,l.side);tries++) nextX+=180;
+            l.x=nextX;
+            l.y=l.side===0?roadY-34:roadY+roadH+54;
+        }
+    }
+
+    // Gas stations are distance-based, so they appear only once in a while.
+    gasStations=gasStations.filter(g=>g.x+g.w>-280);
+    const furthestWorld=Math.max(
+        W+300,
+        ...buildings.map(b=>b.x+b.w),
+        ...skyscrapers.map(s=>s.x+s.w)
+    );
+    if(gasTravelSinceLast>=nextGasStationTravel && gasStations.length===0){
+        const station=makeGasStation(furthestWorld+500+Math.random()*260);
+        gasStations.push(station);
+        reserveGasStationSpace(station);
+        clearLampsAroundGasStation(station);
+        refreshCityGapScenery();
+        gasTravelSinceLast=0;
+        nextGasStationTravel=2800+Math.random()*2600;
+    }
+
+    for(const c of cars){
+        if(c===drivingCar) continue;
+        if(c.x+c.w<-130){
+            const others=cars.filter(x=>x!==c && x!==drivingCar);
+            const furthest=Math.max(...(others.length?others.map(t=>t.x+t.w/2):[W]),W);
+            c.kind=randomVehicleKind();
+            applyVehicleDimensions(c);
+            c.rotation=0;
+            c.color=randomVehicleColor();
+            c.maxFuel=100;
+            c.fuel=5+Math.random()*15;
+            const pos=randomRoadCarPosition(c.w,c.h,Math.max(furthest+320,W+120),Math.max(furthest+900,W+700),c);
+            if(pos){
+                c.x=pos.x;
+                c.y=pos.y;
+            }else{
+                const roadsideEdge=7;
+                c.x=furthest+700;
+                c.y=(Math.random()<.5)
+                    ? roadY+roadsideEdge+c.h/2
+                    : roadY+roadH-roadsideEdge-c.h/2;
+            }
+        }
+    }
+
+    zombies=zombies.filter(z=>z.x>-180);
+    pickups=pickups.filter(p=>p.x>-180);
+    bullets=bullets.filter(b=>b.x>-180 && b.x<W+180);
+}
+
+
+function carBlocked(x,y,car){
+    // Driveable cars must remain completely inside the asphalt.
+    const roadY=H*.43;
+    const roadH=H*.30;
+    const halfW=car.w/2;
+    const halfH=car.h/2;
+    const roadMargin=5;
+
+    if(x-halfW<0 || x+halfW>W) return true;
+    if(y-halfH<roadY+roadMargin || y+halfH>roadY+roadH-roadMargin) return true;
+
+    // Use the real car rectangle against parked cars.
+    for(const other of cars){
+        if(other===car) continue;
+        if(
+            Math.abs(x-other.x)<(car.w+other.w)/2+5 &&
+            Math.abs(y-other.y)<(car.h+other.h)/2+5
+        ) return true;
+    }
+    return false;
+}
+
+function toggleVehicle(){
+    if(!running || paused || !player) return;
+    if(drivingCar){
+        const car=drivingCar;
+        const side=car.rotation+Math.PI/2;
+        const distance=car.h/2+player.radius+16;
+        let ex=car.x+Math.cos(side)*distance;
+        let ey=car.y+Math.sin(side)*distance;
+        if(blocked(ex,ey,player.radius)){
+            ex=car.x-Math.cos(side)*distance;
+            ey=car.y-Math.sin(side)*distance;
+        }
+        if(!blocked(ex,ey,player.radius)){
+            player.x=ex;
+            player.y=ey;
+        }
+        drivingCar=null;
+        carVelocity=0;
+        showMessage("EXITED VEHICLE");
+        return;
+    }
+
+    let nearest=null;
+    let nearestDistance=Infinity;
+    for(const car of cars){
+        const d=Math.hypot(player.x-car.x,player.y-car.y);
+        const enterRange=Math.max(78,Math.hypot(car.w/2,car.h/2)+34);
+        if(d<enterRange && d<nearestDistance){
+            nearest=car;
+            nearestDistance=d;
+        }
+    }
+    if(nearest){
+        drivingCar=nearest;
+        if(drivingCar.maxFuel==null) drivingCar.maxFuel=100;
+        if(drivingCar.fuel==null) drivingCar.fuel=5+Math.random()*15;
+        carVelocity=0;
+        player.x=nearest.x;
+        player.y=nearest.y;
+        showMessage("DRIVING — E TO EXIT");
+    }else{
+        showMessage("GET CLOSER TO A CAR");
+    }
+}
+
+/* =========================================================
+    SHOOT
+ ========================================================= */
+
+function shootMobile(){
+    if(!running || paused || !player) return;
+
+    // Auto-aim at the nearest visible zombie on mobile.
+    let target=null;
+    let best=Infinity;
+    for(const z of zombies){
+        const d=Math.hypot(z.x-player.x,z.y-player.y);
+        if(d<best){
+            best=d;
+            target=z;
+        }
+    }
+
+    // If no zombie exists, animals are a secondary target.
+    if(!target){
+        for(const a of animals){
+            const d=Math.hypot(a.x-player.x,a.y-player.y);
+            if(d<best){
+                best=d;
+                target=a;
+            }
+        }
+    }
+
+    if(target){
+        mouseX=target.x;
+        mouseY=target.y;
+    }else{
+        mouseX=player.x+200;
+        mouseY=player.y;
+    }
+    shoot();
+}
+
+function shoot(){
+    if(!running || paused || !player)
+         return;
+    if(drivingCar){
+        showMessage("EXIT THE CAR TO SHOOT");
+        return;
+    }
+    if(player.ammo<=0){
+        showMessage("OUT OF AMMO");
+         return;
+     }
+    let dx=mouseX-player.x;
+     let dy=mouseY-player.y;
+    const length=Math.hypot(dx,dy);
+    if(length===0)return;
+    dx/=length;
+     dy/=length;
+    player.ammo--;
+    bullets.push({
+         x:player.x+dx*25,
+         y:player.y+dy*25,
+         dx:dx,
+         dy:dy,
+         speed:15,
+         life:55,
+         damage:player.power
+     });
+ }
+/* =========================================================
+    BULLETS
+ ========================================================= */
+function updateBullets(){
+    for(let i=bullets.length-1;i>=0;i--){
+        const b=bullets[i];
+        b.x+=b.dx*b.speed;
+         b.y+=b.dy*b.speed;
+        b.life--;
+        if(
+             b.life<=0 ||
+             b.x<0 ||
+             b.x>W ||
+             b.y<0 ||
+             b.y>H
+         ){
+            bullets.splice(i,1);
+             continue;
+         }
+        /* solid world collision */
+        if(blocked(b.x,b.y,2)){
+            bullets.splice(i,1);
+             continue;
+         }
+        let hit=false;
+        /* zombies */
+        for(let j=zombies.length-1;j>=0;j--){
+            const z=zombies[j];
+            if(
+                 Math.hypot(
+                     b.x-z.x,
+                     b.y-z.y
+                 )<z.radius+5
+             ){
+                z.health-=b.damage;
+                 z.hitFlash=4;
+                bullets.splice(i,1);
+                hit=true;
+                if(z.health<=0){
+                    dropAmmo(z.x,z.y);
+                    score+=1;
+                    zombies.splice(j,1);
+                 }
+                break;
+             }
+         }
+        if(hit)continue;
+        /* animals */
+        for(let j=animals.length-1;j>=0;j--){
+            const a=animals[j];
+            if(
+                 Math.hypot(
+                     b.x-a.x,
+                     b.y-a.y
+                 )<a.radius+5
+             ){
+                a.health-=b.damage;
+                 a.hitFlash=4;
+                bullets.splice(i,1);
+                if(a.health<=0){
+                    score+=
+                         a.type==="bear"
+                             ?60
+                             :35;
+                    animals.splice(j,1);
+                 }
+                break;
+             }
+         }
+     }
+ }
+/* =========================================================
+    AMMO DROPS
+ ========================================================= */
+function dropAmmo(x,y){
+    const range=difficulties[difficulty].ammoDrop;
+    const amount=
+         Math.floor(
+             Math.random()*
+             (range[1]-range[0]+1)
+         )+
+         range[0];
+    pickups.push({
+         x:x,
+         y:y,
+         amount:amount
+     });
+ }
+/* =========================================================
+    ENEMY UPDATE
+ ========================================================= */
+function updateEnemies(){
+    const d=difficulties[difficulty];
+
+    // A moving vehicle kills zombies it actually runs over.
+    if(drivingCar && Math.abs(carVelocity)>1.0){
+        for(let i=zombies.length-1;i>=0;i--){
+            const z=zombies[i];
+            const hitX=Math.abs(z.x-drivingCar.x)<drivingCar.w/2+z.radius*.65;
+            const hitY=Math.abs(z.y-drivingCar.y)<drivingCar.h/2+z.radius*.65;
+            if(hitX && hitY){
+                dropAmmo(z.x,z.y);
+                zombies.splice(i,1);
+                score+=1;
+                carVelocity*=0.92;
+            }
+        }
+    }
+    const level=Math.floor(
+         survivalTime/d.escalation
+     );
+    /*
+      * Difficulty increases gradually instead of making
+      * zombies absurdly fast.
+      */
+    const speedMultiplier=
+         1+
+         Math.min(
+             level*.025,
+             .22
+         );
+    const maxExtra=
+         difficulty==="easy"
+             ?Math.min(level,6)
+             :difficulty==="normal"
+             ?Math.min(level*2,14)
+             :Math.min(level*3,24);
+    const currentMax=
+         d.baseMax+maxExtra;
+    for(const z of zombies){
+        z.speed=
+             d.zombieSpeed*
+             speedMultiplier;
+        moveZombie(z);
+        if(z.hitFlash>0)
+             z.hitFlash--;
+        const distance=Math.hypot(
+             player.x-z.x,
+             player.y-z.y
+         );
+        if(distance<player.radius+z.radius && !drivingCar){
+            player.health-=
+                 d.contactDamage/60;
+         }
+     }
+
+    // Being inside a car is safer, but not invulnerable.
+    // If a crowd surrounds the vehicle, zombies begin damaging the player through the car.
+    if(drivingCar){
+        let nearbyZombies=0;
+        const swarmRadius=95;
+        for(const z of zombies){
+            if(Math.hypot(z.x-drivingCar.x,z.y-drivingCar.y)<swarmRadius){
+                nearbyZombies++;
+            }
+        }
+        const swarmThreshold=4;
+        if(nearbyZombies>=swarmThreshold){
+            const extra=Math.min(nearbyZombies-swarmThreshold,8);
+            player.health-=(1.8+extra*.65)/60;
+        }
+    }
+    if(
+         zombies.length<currentMax &&
+         Math.random()<d.spawnRate
+     ){
+         spawnZombie();
+     }
+    /* animals */
+    for(const a of animals){
+        moveAnimal(a);
+        if(a.hitFlash>0)
+             a.hitFlash--;
+        const distance=Math.hypot(
+             player.x-a.x,
+             player.y-a.y
+         );
+        if(distance<player.radius+a.radius){
+            player.health-=
+                 a.damage/60;
+         }
+     }
+    /*
+      * Rare animal events.
+      * Most of the time nothing happens.
+      */
+    animalTimer-=1/60;
+    if(animalTimer<=0){
+        animalTimer=
+             28+
+             Math.random()*35;
+        if(
+             (locationName==="snow" ||
+              locationName==="forest") &&
+             Math.random()<.18
+         ){
+             spawnWolfPack();
+         }
+     }
+ }
+/* =========================================================
+    BACKGROUND
+ ========================================================= */
+function drawBackground(){
+    if(locationName==="snow"){
+        ctx.fillStyle="#b8c2c5";
+        ctx.fillRect(0,0,W,H);
+    }else if(locationName==="rain"){
+        ctx.fillStyle="#303938";
+        ctx.fillRect(0,0,W,H);
+    }else if(locationName==="forest"){
+        ctx.fillStyle="#1d3927";
+        ctx.fillRect(0,0,W,H);
+    }else{
+        // Dark dusk sky gives the skyline stronger depth.
+        const sky=ctx.createLinearGradient(0,0,0,H*.46);
+        sky.addColorStop(0,"#101923");
+        sky.addColorStop(.6,"#202a2d");
+        sky.addColorStop(1,"#343632");
+        ctx.fillStyle=sky;
+        ctx.fillRect(0,0,W,H);
+    }
+
+    // Skyline belongs behind the road and all gameplay objects.
+    if(locationName==="city") drawSkyline();
+
+    if(locationName==="city" || locationName==="snow" || locationName==="rain"){
+        drawRoad();
+    }
+    if(locationName==="forest") drawForestGround();
+}
+
+function drawStructureFire(x,y,w,h,intensity=1){
+    const t=performance.now()/1000;
+    ctx.save();
+
+    // Realistic-ish fire: keep the structure visible and build the effect from
+    // narrow flame tongues, hot window openings, soot, embers, and heavy smoke.
+    const sourceCount=w>230?4:3;
+    const sources=[];
+    for(let i=0;i<sourceCount;i++){
+        const seed=(i*0.37+0.18)%1;
+        sources.push({
+            x:x+w*(.16+seed*.68),
+            y:y+h*(.48+((i*31)%37)/100),
+            phase:i*1.91,
+            size:Math.max(24,Math.min(48,w*.16))
+        });
+    }
+
+    // Soot/scorch around the actual fire sources instead of tinting the whole building.
+    ctx.globalCompositeOperation="source-over";
+    for(const s of sources){
+        const soot=ctx.createRadialGradient(s.x,s.y,4,s.x,s.y,s.size*1.25);
+        soot.addColorStop(0,`rgba(8,8,8,${.42*intensity})`);
+        soot.addColorStop(.55,`rgba(18,16,14,${.22*intensity})`);
+        soot.addColorStop(1,"rgba(10,10,10,0)");
+        ctx.fillStyle=soot;
+        ctx.fillRect(s.x-s.size*1.5,s.y-s.size*1.45,s.size*3,s.size*2.1);
+    }
+
+    // Local reflected light only around active flames.
+    ctx.globalCompositeOperation="screen";
+    for(const s of sources){
+        const glow=ctx.createRadialGradient(s.x,s.y,2,s.x,s.y,s.size*1.8);
+        glow.addColorStop(0,`rgba(255,190,70,${.18*intensity})`);
+        glow.addColorStop(.35,`rgba(255,88,18,${.08*intensity})`);
+        glow.addColorStop(1,"rgba(255,60,5,0)");
+        ctx.fillStyle=glow;
+        ctx.fillRect(s.x-s.size*2,s.y-s.size*2,s.size*4,s.size*3.2);
+    }
+
+    // Individual flame tongues. They are narrow, translucent and independently flickering.
+    for(const s of sources){
+        const tongues=5;
+        for(let j=0;j<tongues;j++){
+            const lateral=(j-(tongues-1)/2)*s.size*.18;
+            const flicker=.78+.18*Math.sin(t*(5.5+j*.8)+s.phase+j*1.13)
+                         +.08*Math.sin(t*11.2+j*2.2);
+            const flameH=s.size*(1.15+j*.13)*flicker;
+            const flameW=s.size*(.22+(j%2)*.05);
+            const cx=s.x+lateral+Math.sin(t*3.7+s.phase+j)*4;
+            const base=s.y+4;
+
+            // Outer red/orange shell.
+            const outer=ctx.createLinearGradient(0,base-flameH,0,base);
+            outer.addColorStop(0,"rgba(120,12,2,0)");
+            outer.addColorStop(.34,`rgba(185,28,4,${.50*intensity})`);
+            outer.addColorStop(.72,`rgba(238,72,8,${.72*intensity})`);
+            outer.addColorStop(1,`rgba(245,118,18,${.75*intensity})`);
+            ctx.fillStyle=outer;
+            ctx.beginPath();
+            ctx.moveTo(cx-flameW,base);
+            ctx.quadraticCurveTo(cx-flameW*.9,base-flameH*.43,cx+Math.sin(t*5+j)*flameW*.22,base-flameH);
+            ctx.quadraticCurveTo(cx+flameW*.95,base-flameH*.45,cx+flameW,base);
+            ctx.quadraticCurveTo(cx,base-flameH*.08,cx-flameW,base);
+            ctx.fill();
+
+            // Small pale hot core near the base.
+            if(j%2===0){
+                const coreH=flameH*.46;
+                const coreW=flameW*.52;
+                const core=ctx.createLinearGradient(0,base-coreH,0,base);
+                core.addColorStop(0,"rgba(255,205,70,0)");
+                core.addColorStop(.5,`rgba(255,205,74,${.55*intensity})`);
+                core.addColorStop(1,`rgba(255,245,196,${.82*intensity})`);
+                ctx.fillStyle=core;
+                ctx.beginPath();
+                ctx.moveTo(cx-coreW,base);
+                ctx.quadraticCurveTo(cx-coreW*.5,base-coreH*.5,cx,base-coreH);
+                ctx.quadraticCurveTo(cx+coreW*.55,base-coreH*.48,cx+coreW,base);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+    }
+
+    // Dense smoke column that broadens and drifts as it rises.
+    ctx.globalCompositeOperation="source-over";
+    for(let i=0;i<34;i++){
+        const s=sources[i%sources.length];
+        const cycle=h*.9+180;
+        const rise=(t*(13+(i%6)*1.8)+i*23)%cycle;
+        const drift=Math.sin(t*.42+i*.83)*(10+rise*.10)+rise*.035;
+        const sx=s.x+drift;
+        const sy=s.y-rise;
+        const r=10+rise*.085+(i%5)*2.8;
+        const fade=Math.max(0,1-rise/cycle);
+        const alpha=(.08+.19*fade)*intensity;
+        const shade=22+(i%4)*6;
+        ctx.fillStyle=`rgba(${shade},${shade},${shade+2},${alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(sx,sy,r*1.15,r,0,0,Math.PI*2);
+        ctx.fill();
+    }
+
+    // Sparse sparks/embers.
+    ctx.globalCompositeOperation="screen";
+    for(let i=0;i<12;i++){
+        const s=sources[i%sources.length];
+        const rise=(t*(42+(i%4)*7)+i*31)%(h*.55+95);
+        const ex=s.x+Math.sin(t*2.1+i)*s.size*.65;
+        const ey=s.y-rise;
+        const a=.18+.18*(1-rise/(h*.55+95));
+        ctx.fillStyle=`rgba(255,${150+(i%3)*28},${35+(i%2)*18},${a*intensity})`;
+        ctx.fillRect(ex,ey,1.5,2.5);
+    }
+
+    ctx.restore();
+}
+
+function drawSkyline(){
+    // RESTORED VERSION 1 skyscraper appearance.
+    // Keep the skyline preloaded far ahead, but only draw towers close to view.
+    for(const s of skyscrapers){
+        if(s.x+s.w < -120 || s.x > W+120) continue;
+        ctx.fillStyle="#303634";
+        ctx.fillRect(s.x,s.y,s.w,s.h);
+
+        ctx.fillStyle="#1e2321";
+        ctx.fillRect(s.x-3,s.y,s.w+6,8);
+
+        for(let x=s.x+12;x<s.x+s.w-10;x+=19){
+            for(let y=s.y+18;y<s.y+s.h-12;y+=25){
+                ctx.fillStyle="#535a55";
+                ctx.fillRect(x,y,8,13);
+            }
+        }
+
+        // Version 2 fire effects remain available without changing the tower shape.
+        if(s.burning) drawStructureFire(s.x,s.y,s.w,s.h,1);
+    }
+}
+/* =========================================================
+    ROAD
+ ========================================================= */
+function drawRoad(){
+    const roadY=H*.43;
+     const roadH=H*.30;
+    /* sidewalks */
+    ctx.fillStyle=
+         locationName==="snow"
+             ?"#d1d6d5"
+             :"#777b77";
+    ctx.fillRect(
+         0,
+         roadY-17,
+         W,
+         17
+     );
+    ctx.fillRect(
+         0,
+         roadY+roadH,
+         W,
+         17
+     );
+    /* road */
+    ctx.fillStyle=
+         locationName==="snow"
+             ?"#555b5b"
+             :"#303432";
+    ctx.fillRect(
+         0,
+         roadY,
+         W,
+         roadH
+     );
+/* lane marking */
+ctx.strokeStyle="#b4ad7e";
+ctx.lineWidth=4;
+ctx.setLineDash([35,28]);
+ctx.lineDashOffset=["city","rain","snow"].includes(locationName) ? (worldScroll%63) : 0;
+ctx.beginPath();
+ctx.moveTo(
+    0,
+    roadY+roadH/2
+);
+ctx.lineTo(
+    W,
+    roadY+roadH/2
+);
+ctx.stroke();
+ctx.setLineDash([]);
+ctx.lineDashOffset=0;
+ }
+/* =========================================================
+    FOREST GROUND
+ ========================================================= */
+function drawForestGround(){
+    ctx.fillStyle="#24472d";
+    for(let x=0;x<W;x+=90){
+        ctx.fillRect(
+             x,
+             H*.45,
+             45,
+             2
+         );
+     }
+    /* dirt path */
+    ctx.fillStyle="#584a35";
+    ctx.beginPath();
+    ctx.moveTo(W*.38,0);
+     ctx.lineTo(W*.63,0);
+     ctx.lineTo(W*.59,H);
+     ctx.lineTo(W*.43,H);
+    ctx.closePath();
+     ctx.fill();
+    /* snow patches in forest */
+    if(locationName==="forest"){
+        ctx.fillStyle="#355636";
+        for(let i=0;i<25;i++){
+            const x=(i*131)%W;
+             const y=(i*89)%H;
+            ctx.beginPath();
+            ctx.ellipse(
+                 x,
+                 y,
+                 20,
+                 5,
+                 0,
+                 0,
+                 Math.PI*2
+             );
+            ctx.fill();
+         }
+     }
+ }
+function drawGasStation(g){
+    ctx.save();
+
+    const roadY=H*.43;
+    const roadH=H*.30;
+    const forecourtY=roadY+roadH+2;
+    const green="#176b45";
+    const darkGreen="#0e4f34";
+    const offWhite="#f5f6f1";
+    const concrete="#777b76";
+
+    // Clean concrete forecourt with a wide driveway opening from the road.
+    ctx.fillStyle=concrete;
+    ctx.fillRect(g.x-30,forecourtY,g.w+420,g.y+g.h-forecourtY+24);
+    ctx.fillStyle="#9da19b";
+    ctx.fillRect(g.x-30,forecourtY,g.w+420,6);
+
+    // Painted pull-in fueling bays: these are the actual places to stop for gas.
+    const pumps=[g.pumpX,g.pump2X];
+    ctx.strokeStyle="#e7e9e3";
+    ctx.lineWidth=2;
+    for(const px of pumps){
+        ctx.strokeRect(px-34,roadY+roadH-54,68,64);
+        ctx.fillStyle="rgba(255,255,255,.72)";
+        ctx.font="bold 9px Arial";
+        ctx.textAlign="center";
+        ctx.fillText("FUEL BAY",px,roadY+roadH-35);
+    }
+
+    // Convenience-store building: simple, readable green + white identity.
+    ctx.fillStyle=offWhite;
+    ctx.fillRect(g.x,g.y,g.w,g.h);
+    ctx.fillStyle=green;
+    ctx.fillRect(g.x,g.y,g.w,28);
+    ctx.fillStyle=darkGreen;
+    ctx.fillRect(g.x,g.y+28,g.w,5);
+
+    // Storefront windows and centered entrance — no overlapping text/graphics.
+    ctx.fillStyle="#203135";
+    ctx.fillRect(g.x+15,g.y+48,70,54);
+    ctx.fillRect(g.x+94,g.y+48,70,54);
+    ctx.fillRect(g.x+178,g.y+43,54,75);
+    ctx.strokeStyle="#9ca9a6";
+    ctx.lineWidth=2;
+    ctx.strokeRect(g.x+15,g.y+48,70,54);
+    ctx.strokeRect(g.x+94,g.y+48,70,54);
+    ctx.strokeRect(g.x+178,g.y+43,54,75);
+    ctx.fillStyle="#d8ddd7";
+    ctx.fillRect(g.x+203,g.y+80,4,4);
+
+    // Store name fits entirely inside the fascia.
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 16px Arial";
+    ctx.textAlign="center";
+    ctx.fillText("GREENWAY",g.x+g.w/2,g.y+19);
+
+    // Full canopy with realistic support columns and separated branding stripe.
+    const canopyX=g.x+12;
+    const canopyY=g.y-74;
+    const canopyW=g.w+34;
+    ctx.fillStyle=offWhite;
+    ctx.fillRect(canopyX,canopyY,canopyW,20);
+    ctx.fillStyle=green;
+    ctx.fillRect(canopyX,canopyY,canopyW,7);
+    ctx.fillStyle="#d7dad4";
+    ctx.fillRect(canopyX+10,canopyY+20,8,78);
+    ctx.fillRect(canopyX+canopyW-18,canopyY+20,8,78);
+    ctx.fillStyle="rgba(255,248,204,.9)";
+    for(let lx=canopyX+38;lx<canopyX+canopyW-28;lx+=64) ctx.fillRect(lx,canopyY+11,18,3);
+
+    // Two pumps, each centered inside its own marked fueling bay.
+    for(const px of pumps){
+        const py=g.pumpY;
+        ctx.fillStyle="#8d928b";
+        ctx.fillRect(px-24,py+17,48,8);
+        ctx.fillStyle=offWhite;
+        ctx.fillRect(px-15,py-26,30,44);
+        ctx.fillStyle=green;
+        ctx.fillRect(px-15,py-26,30,8);
+        ctx.fillStyle="#1f2929";
+        ctx.fillRect(px-9,py-13,18,11);
+        ctx.fillStyle="#d8e2dc";
+        ctx.font="bold 8px Arial";
+        ctx.textAlign="center";
+        ctx.fillText("87",px,py-5);
+        ctx.strokeStyle="#171d1c";
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(px+15,py-10);
+        ctx.quadraticCurveTo(px+31,py-2,px+22,py+20);
+        ctx.stroke();
+        ctx.fillStyle="#d4b63d";
+        ctx.fillRect(px-23,py-4,4,25);
+        ctx.fillRect(px+19,py-4,4,25);
+    }
+
+    // Small fuel-stock display on the store wall, sized to fit cleanly.
+    const stockPct=Math.max(0,Math.min(1,g.fuelStock/g.maxFuelStock));
+    ctx.fillStyle="#27302d";
+    ctx.fillRect(g.x+15,g.y+108,145,16);
+    ctx.fillStyle="#161b19";
+    ctx.fillRect(g.x+18,g.y+111,139,10);
+    ctx.fillStyle=stockPct>.25?green:"#8a3a2d";
+    ctx.fillRect(g.x+18,g.y+111,139*stockPct,10);
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 8px Arial";
+    ctx.textAlign="center";
+    ctx.fillText("FUEL AVAILABLE "+Math.round(g.fuelStock)+"%",g.x+87,g.y+119);
+
+    // Large, unmistakable fuel-storage tank beside the store.
+    // This is intentionally separate from the building so it reads as a tank.
+    const tx=g.tankX;
+    const ty=g.tankY;
+    ctx.save();
+    // Concrete pad
+    ctx.fillStyle="#777d78";
+    ctx.fillRect(tx-92,ty+54,184,12);
+    // Support frame
+    ctx.strokeStyle="#454c48";
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(tx-48,ty+45); ctx.lineTo(tx-58,ty+60);
+    ctx.moveTo(tx+48,ty+45); ctx.lineTo(tx+58,ty+60);
+    ctx.stroke();
+    // Tall horizontal cylindrical tank
+    ctx.fillStyle="#f2f4ef";
+    ctx.strokeStyle=darkGreen;
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.roundRect(tx-82,ty-48,164,100,46);
+    ctx.fill();
+    ctx.stroke();
+    // Green identity band
+    ctx.fillStyle=green;
+    ctx.fillRect(tx-70,ty-10,140,30);
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 11px Arial";
+    ctx.textAlign="center";
+    ctx.fillText("GASOLINE TANK",tx,ty+10);
+    ctx.fillStyle=g.tankBonusUsed?"#6e746f":"#f5f6f1";
+    ctx.font="bold 9px Arial";
+    ctx.fillText(g.tankBonusUsed?"EMPTY":"+40 GAS",tx,ty+31);
+    // Fill cap + gauge
+    ctx.fillStyle="#343b37";
+    ctx.fillRect(tx-9,ty-48,18,13);
+    ctx.fillStyle="#d9ddd8";
+    ctx.beginPath(); ctx.arc(tx+27,ty-20,8,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#3f4742"; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle="#b23d32";
+    ctx.beginPath(); ctx.moveTo(tx+27,ty-20); ctx.lineTo(tx+31,ty-25); ctx.stroke();
+    // Visible pipe from storage tank toward the pump island.
+    ctx.strokeStyle="#66706a";
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(tx-70,ty+26);
+    ctx.lineTo(tx-78,ty+24);
+    ctx.lineTo(tx-78,g.pumpY+28);
+    ctx.lineTo(g.pump2X+18,g.pumpY+28);
+    ctx.stroke();
+    ctx.restore();
+
+    // Tall roadside GAS sign to the RIGHT of the gasoline tank. Station mechanics are untouched.
+    const sx=g.signX;
+    ctx.fillStyle="#39413d";
+    ctx.fillRect(sx,g.y-62,9,122);
+    ctx.fillStyle=offWhite;
+    ctx.fillRect(sx-36,g.y-100,82,61);
+    ctx.strokeStyle=darkGreen;
+    ctx.lineWidth=3;
+    ctx.strokeRect(sx-36,g.y-100,82,61);
+    ctx.fillStyle=green;
+    ctx.fillRect(sx-36,g.y-100,82,22);
+    ctx.fillStyle="#fff";
+    ctx.font="bold 13px Arial";
+    ctx.textAlign="center";
+    ctx.fillText("GAS",sx+5,g.y-84);
+    ctx.fillStyle="#1e2926";
+    ctx.font="bold 10px Arial";
+    ctx.fillText("GREENWAY",sx+5,g.y-66);
+    ctx.font="bold 12px Arial";
+    ctx.fillText("$"+g.price,sx+5,g.y-48);
+
+    // Interaction label appears above the nearest fueling bay only.
+    if(drivingCar){
+        const nearestPump=Math.min(
+            Math.hypot(drivingCar.x-g.pumpX,drivingCar.y-g.pumpY),
+            Math.hypot(drivingCar.x-g.pump2X,drivingCar.y-g.pumpY)
+        );
+        if(nearestPump<100){
+            const targetX=Math.abs(drivingCar.x-g.pumpX)<Math.abs(drivingCar.x-g.pump2X)?g.pumpX:g.pump2X;
+            ctx.fillStyle="rgba(0,0,0,.76)";
+            ctx.fillRect(targetX-66,g.pumpY-62,132,23);
+            ctx.fillStyle="#fff";
+            ctx.font="bold 11px Arial";
+            ctx.textAlign="center";
+            const full=(drivingCar.fuel||0)>=(drivingCar.maxFuel||100)-.2;
+            ctx.fillText(g.fuelStock<=0?"OUT OF GAS":full?"TANK FULL":"REFUELING...",targetX,g.pumpY-46);
+        }
+    }
+    ctx.restore();
+}
+
+/* =========================================================
+    MAP DRAW
+ ========================================================= */
+function drawMap(){
+    /* buildings */
+    for(const b of buildings){
+        if(b.x+b.w < -140 || b.x > W+140) continue;
+        ctx.fillStyle=
+             locationName==="snow"
+                 ?"#858e90"
+                 :"#4a504d";
+        ctx.fillRect(
+             b.x,
+             b.y,
+             b.w,
+             b.h
+         );
+        if(b.roof){
+    /* Main roof */
+ctx.fillStyle =
+    (locationName === "city" || locationName === "rain")
+        ? "#000000"
+        : "#4b5050";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        b.x - 15,
+        b.y
+    );
+
+    ctx.lineTo(
+        b.x + b.w / 2,
+        b.y - 43
+    );
+
+    ctx.lineTo(
+        b.x + b.w + 15,
+        b.y
+    );
+
+    ctx.closePath();
+    ctx.fill();
+
+    /* Snow layer */
+    if(b.snow && locationName === "snow"){
+
+        ctx.fillStyle = "#f2f4f3";
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            b.x - 17,
+            b.y - 1
+        );
+
+        ctx.lineTo(
+            b.x + b.w / 2,
+            b.y - 49
+        );
+
+        ctx.lineTo(
+            b.x + b.w + 17,
+            b.y - 1
+        );
+
+        ctx.lineTo(
+            b.x + b.w + 10,
+            b.y + 6
+        );
+
+        ctx.lineTo(
+            b.x + b.w / 2,
+            b.y - 40
+        );
+
+        ctx.lineTo(
+            b.x - 10,
+            b.y + 6
+        );
+
+        ctx.closePath();
+        ctx.fill();
+    }
+         }
+        /* windows */
+        ctx.fillStyle="#252b28";
+        ctx.fillRect(
+             b.x+20,
+             b.y+25,
+             32,
+             25
+         );
+        ctx.fillRect(
+             b.x+b.w-52,
+             b.y+25,
+             32,
+             25
+         );
+        /* door */
+        ctx.fillStyle="#292421";
+        ctx.fillRect(
+             b.x+b.w/2-15,
+             b.y+b.h-44,
+             30,
+             44
+         );
+        if(b.burning && ["city","rain","snow"].includes(locationName)){
+            drawStructureFire(b.x,b.y,b.w,b.h,.8);
+        }
+     }
+    // Gas stations sit in front of the roadside building layer.
+    for(const g of gasStations){
+        if(g.x+g.w+620 < -150 || g.x > W+150) continue;
+        drawGasStation(g);
+    }
+    /* trees */
+    for(const t of trees){
+        if(t.x+t.r*3 < -100 || t.x-t.r*3 > W+100) continue;
+        if(t.roadside){
+            const scale=t.r/16;
+            const yScale=t.cityGap ? 1.28 : 1;
+            // Square roadside planter/soil bed around each patterned tree.
+            ctx.fillStyle="#78756d";
+            ctx.fillRect(t.x-28*scale,t.y+22*scale,56*scale,10*scale);
+            ctx.fillStyle=locationName==="snow"?"#e8ece9":"#4a3425";
+            ctx.fillRect(t.x-23*scale,t.y+15*scale,46*scale,13*scale);
+            ctx.strokeStyle="#9a9a91";
+            ctx.lineWidth=2;
+            ctx.strokeRect(t.x-28*scale,t.y+15*scale,56*scale,18*scale);
+            // Short roadside trunk.
+            // In Snowy Town and Rainy Suburbs, root the trunk visibly INTO the
+            // dirt pile instead of letting it extend below the planter.
+            const suburbRooted=["city","snow","rain"].includes(locationName);
+            ctx.fillStyle="#57402f";
+            if(suburbRooted){
+                const trunkTop=t.y-12*scale*yScale;
+                const trunkBottom=t.y+22*scale; // center of the visible soil bed
+                ctx.fillRect(
+                    t.x-4*scale,
+                    trunkTop,
+                    8*scale,
+                    trunkBottom-trunkTop
+                );
+            }else{
+                ctx.fillRect(t.x-4*scale,t.y-6*yScale,8*scale,40*scale*yScale);
+            }
+
+            if(locationName==="snow"){
+                // Compact snow-town evergreen, seated slightly lower so its
+                // trunk reads as planted in the dirt pile.
+                const crownBaseShift=suburbRooted ? 5*scale : 0;
+                ctx.fillStyle="#1d4a31";
+                for(let layer=0;layer<3;layer++){
+                    const yy=t.y-42*scale*yScale+layer*14*scale*yScale+crownBaseShift;
+                    const half=(18-layer*2)*scale;
+                    ctx.beginPath();
+                    ctx.moveTo(t.x,yy-18*scale*yScale);
+                    ctx.lineTo(t.x-half,yy+12*scale*yScale);
+                    ctx.lineTo(t.x+half,yy+12*scale*yScale);
+                    ctx.closePath(); ctx.fill();
+                }
+                ctx.fillStyle="rgba(245,248,247,.9)";
+                ctx.beginPath();
+                ctx.ellipse(
+                    t.x,
+                    t.y-45*scale*yScale+crownBaseShift,
+                    12*scale,
+                    4*scale,
+                    0,0,Math.PI*2
+                );
+                ctx.fill();
+            }else{
+                // Small deciduous roadside tree.
+                ctx.fillStyle=t.type===0?"#245b35":"#326b3e";
+                const crownShift=suburbRooted ? 5 : 0;
+                const crowns=[[-10,-30+crownShift,14],[8,-34+crownShift,15],[0,-47+crownShift,16],[-1,-22+crownShift,17]];
+                for(const [ox,oy,rr] of crowns){
+                    ctx.beginPath();
+                    ctx.arc(t.x+ox*scale,t.y+oy*scale*yScale,rr*scale,0,Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }else{
+            ctx.fillStyle="#493629";
+            ctx.fillRect(t.x-6,t.y,12,40);
+            ctx.fillStyle=t.type===0?"#153822":"#1c4427";
+            ctx.beginPath();
+            ctx.moveTo(t.x,t.y-45);
+            ctx.lineTo(t.x-30,t.y+5);
+            ctx.lineTo(t.x-17,t.y+5);
+            ctx.lineTo(t.x-35,t.y+27);
+            ctx.lineTo(t.x+35,t.y+27);
+            ctx.lineTo(t.x+17,t.y+5);
+            ctx.lineTo(t.x+30,t.y+5);
+            ctx.closePath();
+            ctx.fill();
+        }
+     }
+    /* lamps + light pools */
+    for(const l of lamps){
+        if(l.x < -120 || l.x > W+120) continue;
+        const sc=l.compact?(l.compactScale||.58):1;
+        const headX=l.x-15*sc;
+        const headY=l.y-66*sc;
+        const glow=ctx.createRadialGradient(headX,headY,3*sc,l.x-10*sc,l.y-30*sc,88*sc);
+        glow.addColorStop(0,"rgba(255,229,154,.30)");
+        glow.addColorStop(.35,"rgba(255,220,135,.12)");
+        glow.addColorStop(1,"rgba(255,220,135,0)");
+        ctx.fillStyle=glow;
+        ctx.fillRect(l.x-100*sc,l.y-155*sc,190*sc,185*sc);
+
+        ctx.strokeStyle="#1e2423";
+        ctx.lineWidth=6*sc;
+        ctx.beginPath();
+        ctx.moveTo(l.x,l.y+2*sc);
+        ctx.lineTo(l.x,l.y-61*sc);
+        ctx.stroke();
+
+        ctx.strokeStyle="#3b4340";
+        ctx.lineWidth=Math.max(1,2*sc);
+        ctx.beginPath();
+        ctx.moveTo(l.x,l.y-60*sc);
+        ctx.quadraticCurveTo(l.x-4*sc,l.y-68*sc,l.x-15*sc,l.y-68*sc);
+        ctx.stroke();
+
+        ctx.fillStyle="#232927";
+        ctx.fillRect(l.x-22*sc,l.y-72*sc,15*sc,7*sc);
+        ctx.fillStyle="#f4d989";
+        ctx.beginPath();
+        ctx.arc(l.x-15*sc,l.y-66*sc,5*sc,0,Math.PI*2);
+        ctx.fill();
+    }
+    /* cars */
+    for(const car of cars){
+         if(car.x+car.w < -120 || car.x-car.w > W+120) continue;
+         drawCar(car);
+     }
+ }
+/* =========================================================
+    CIVILIAN CARS
+ ========================================================= */
+function randomVehicleKind(){
+    const r=Math.random();
+    if(r<0.27) return "sedan";
+    if(r<0.52) return "suv";
+    if(r<0.68) return "pickup";
+    if(r<0.82) return "truck";
+    return "supercar";
+}
+
+function applyVehicleDimensions(c){
+    const kind=c.kind||"sedan";
+    if(kind==="suv"){ c.w=96; c.h=44; }
+    else if(kind==="pickup"){ c.w=104; c.h=42; }
+    else if(kind==="truck"){ c.w=126; c.h=50; }
+    else if(kind==="supercar"){ c.w=94; c.h=32; }
+    else { c.w=88; c.h=38; }
+}
+
+function drawCar(c){
+    if(!c.kind) c.kind="sedan";
+    ctx.save();
+    ctx.translate(c.x,c.y);
+
+    const w=c.w, h=c.h;
+    const front=w*.50;   // EVERY vehicle's nose is on the RIGHT.
+    const rear=-w*.50;
+
+    ctx.fillStyle="#0006";
+    ctx.beginPath();
+    ctx.ellipse(0,h*.48,w*.55,7,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle=c.color;
+
+    if(c.kind==="supercar"){
+        // Right-facing exotic: blunt rear on LEFT, long pointed nose on RIGHT.
+        ctx.beginPath();
+        ctx.moveTo(rear,h*.18);
+        ctx.lineTo(rear,-h*.08);
+        ctx.lineTo(-w*.30,-h*.20);
+        ctx.lineTo(-w*.12,-h*.48);
+        ctx.lineTo(w*.12,-h*.50);
+        ctx.lineTo(w*.29,-h*.30);
+        ctx.lineTo(front,-h*.10);
+        ctx.lineTo(front,h*.08);
+        ctx.lineTo(w*.36,h*.20);
+        ctx.lineTo(-w*.32,h*.23);
+        ctx.closePath();
+        ctx.fill();
+        // Dark cockpit centered behind the long right-side nose.
+        ctx.fillStyle="#142023";
+        ctx.beginPath();
+        ctx.moveTo(-w*.10,-h*.42);
+        ctx.lineTo(w*.10,-h*.43);
+        ctx.lineTo(w*.25,-h*.25);
+        ctx.lineTo(-w*.03,-h*.23);
+        ctx.closePath();
+        ctx.fill();
+        // Side intake behind front wheel.
+        ctx.fillStyle="#202827";
+        ctx.beginPath();
+        ctx.moveTo(w*.12,-h*.05);
+        ctx.lineTo(w*.29,-h*.09);
+        ctx.lineTo(w*.24,h*.10);
+        ctx.lineTo(w*.08,h*.09);
+        ctx.closePath();
+        ctx.fill();
+        // Small rear wing stays on the LEFT/rear.
+        ctx.fillStyle=c.color;
+        ctx.fillRect(rear+w*.03,-h*.34,w*.18,4);
+    }else if(c.kind==="truck"){
+        // Box/cargo is LEFT; cab and windshield are RIGHT = unmistakably faces right.
+        ctx.beginPath(); ctx.roundRect(rear,-h*.34,w*.60,h*.61,4); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(w*.10,-h*.42); ctx.lineTo(w*.35,-h*.42);
+        ctx.lineTo(front,-h*.18); ctx.lineTo(front,h*.27);
+        ctx.lineTo(w*.08,h*.27); ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#172326";
+        ctx.beginPath();
+        ctx.moveTo(w*.22,-h*.34); ctx.lineTo(w*.34,-h*.34);
+        ctx.lineTo(w*.44,-h*.17); ctx.lineTo(w*.22,-h*.17); ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#3b403e";
+        ctx.fillRect(rear+w*.06,-h*.24,w*.45,3);
+    }else if(c.kind==="pickup"){
+        // Open bed LEFT, passenger cab RIGHT.
+        ctx.beginPath(); ctx.roundRect(rear,-h*.18,w*.43,h*.45,4); ctx.fill();
+        ctx.strokeStyle="#303634"; ctx.lineWidth=3;
+        ctx.strokeRect(rear+w*.05,-h*.15,w*.31,h*.25);
+        ctx.fillStyle=c.color;
+        ctx.beginPath();
+        ctx.moveTo(-w*.03,-h*.42); ctx.lineTo(w*.28,-h*.42);
+        ctx.lineTo(front,-h*.18); ctx.lineTo(front,h*.27);
+        ctx.lineTo(-w*.08,h*.27); ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#172326";
+        ctx.beginPath(); ctx.moveTo(w*.09,-h*.34); ctx.lineTo(w*.27,-h*.34);
+        ctx.lineTo(w*.39,-h*.17); ctx.lineTo(w*.09,-h*.17); ctx.closePath(); ctx.fill();
+    }else if(c.kind==="suv"){
+        ctx.beginPath(); ctx.roundRect(rear,-h*.30,w,h*.58,8); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(rear+w*.18,-h*.30); ctx.lineTo(rear+w*.31,-h*.53);
+        ctx.lineTo(w*.28,-h*.53); ctx.lineTo(front-w*.08,-h*.30); ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#172326";
+        ctx.fillRect(-w*.16,-h*.43,w*.18,h*.14);
+        ctx.beginPath(); ctx.moveTo(w*.06,-h*.43); ctx.lineTo(w*.25,-h*.43); ctx.lineTo(w*.34,-h*.29); ctx.lineTo(w*.06,-h*.29); ctx.closePath(); ctx.fill();
+    }else{
+        ctx.beginPath(); ctx.roundRect(rear,-h*.28,w,h*.56,8); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(rear+w*.24,-h*.28); ctx.lineTo(rear+w*.40,-h*.48);
+        ctx.lineTo(w*.22,-h*.48); ctx.lineTo(front-w*.12,-h*.28); ctx.closePath(); ctx.fill();
+        ctx.fillStyle="#172326";
+        ctx.beginPath(); ctx.moveTo(-w*.18,-h*.30); ctx.lineTo(-w*.08,-h*.43); ctx.lineTo(w*.05,-h*.43); ctx.lineTo(w*.05,-h*.30); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(w*.09,-h*.43); ctx.lineTo(w*.22,-h*.43); ctx.lineTo(w*.31,-h*.30); ctx.lineTo(w*.09,-h*.30); ctx.closePath(); ctx.fill();
+    }
+
+    // Bumpers and lights: white headlight RIGHT, red tail light LEFT.
+    ctx.fillStyle="#202421";
+    ctx.fillRect(rear,h*.14,w*.11,6);
+    ctx.fillRect(front-w*.11,h*.14,w*.11,6);
+    ctx.fillStyle="#8b2323";
+    ctx.fillRect(rear+2,-h*.03,8,7);
+    ctx.fillStyle="#eee2aa";
+    ctx.fillRect(front-10,-h*.03,8,7);
+
+    const wheelR=c.kind==="truck"?h*.25:c.kind==="pickup"?h*.24:c.kind==="supercar"?h*.21:h*.22;
+    const wheelY=h*.30;
+    for(const wx of [-w*.32,w*.32]){
+        ctx.fillStyle="#0c0d0d"; ctx.beginPath(); ctx.arc(wx,wheelY,wheelR,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle="#707575"; ctx.beginPath(); ctx.arc(wx,wheelY,wheelR*.38,0,Math.PI*2); ctx.fill();
+    }
+
+    if(c.kind==="suv"){
+        ctx.fillStyle="#1b201f"; ctx.fillRect(-w*.27,-h*.55,w*.52,3);
+    }
+
+    ctx.restore();
+}
+
+/* =========================================================
+    PICKUPS
+ ========================================================= */
+function drawPickups(){
+    for(const p of pickups){
+        if(p.x < -40 || p.x > W+40 || p.y < -40 || p.y > H+40) continue;
+        ctx.fillStyle="#695d2b";
+        ctx.fillRect(
+             p.x-10,
+             p.y-7,
+             20,
+             14
+         );
+        ctx.fillStyle="#d4c95e";
+        ctx.fillRect(
+             p.x-6,
+             p.y-4,
+             12,
+             7
+         );
+        ctx.fillStyle="#111";
+        ctx.font="bold 8px Arial";
+         ctx.textAlign="center";
+        ctx.fillText(
+             p.amount,
+             p.x,
+             p.y+3
+         );
+     }
+ }
+/* =========================================================
+    ZOMBIE DRAW
+ ========================================================= */
+function drawZombies(){
+    for(const z of zombies){
+        if(z.x < -60 || z.x > W+60 || z.y < -70 || z.y > H+70) continue;
+        ctx.save();
+        if(z.hitFlash>0){
+             ctx.globalAlpha=.55;
+         }
+        /* shadow */
+        ctx.fillStyle="#0007";
+        ctx.beginPath();
+        ctx.ellipse(
+             z.x,
+             z.y+27,
+             16,
+             5,
+             0,
+             0,
+             Math.PI*2
+         );
+        ctx.fill();
+        /* legs */
+        ctx.fillStyle="#252926";
+        ctx.fillRect(
+             z.x-9,
+             z.y+7,
+             7,
+             20
+         );
+        ctx.fillRect(
+             z.x+2,
+             z.y+7,
+             7,
+             20
+         );
+        /* torso */
+        ctx.fillStyle="#4d594b";
+        ctx.beginPath();
+        ctx.roundRect(
+             z.x-12,
+             z.y-8,
+             24,
+             26,
+             4
+         );
+        ctx.fill();
+        /* arms */
+        ctx.fillRect(
+             z.x-18,
+             z.y-5,
+             7,
+             24
+         );
+        ctx.fillRect(
+             z.x+11,
+             z.y-5,
+             7,
+             24
+         );
+        /* head */
+        ctx.fillStyle="#78816e";
+        ctx.beginPath();
+        ctx.ellipse(
+             z.x,
+             z.y-17,
+             11,
+             13,
+             0,
+             0,
+             Math.PI*2
+         );
+        ctx.fill();
+        /* hair */
+        ctx.fillStyle="#242621";
+        ctx.fillRect(
+             z.x-9,
+             z.y-29,
+             18,
+             5
+         );
+        /* human-ish eyes */
+        ctx.fillStyle="#211";
+        ctx.beginPath();
+        ctx.ellipse(
+             z.x-4.5,
+             z.y-19,
+             2.2,
+             1.5,
+             0,
+             0,
+             Math.PI*2
+         );
+        ctx.ellipse(
+             z.x+4.5,
+             z.y-19,
+             2.2,
+             1.5,
+             0,
+             0,
+             Math.PI*2
+         );
+        ctx.fill();
+        /* mouth */
+        ctx.strokeStyle="#3b302b";
+         ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(
+             z.x-5,
+             z.y-10
+         );
+        ctx.lineTo(
+             z.x+5,
+             z.y-10
+         );
+        ctx.stroke();
+
+        // Zombie health bar.
+        const maxHp=z.maxHealth||difficulties[difficulty].zombieHealth||1;
+        const hpRatio=Math.max(0,Math.min(1,z.health/maxHp));
+        const barW=30;
+        const barH=4;
+        const barX=z.x-barW/2;
+        const barY=z.y-39;
+        ctx.globalAlpha=1;
+        ctx.fillStyle="#171a18";
+        ctx.fillRect(barX-1,barY-1,barW+2,barH+2);
+        ctx.fillStyle=hpRatio>.55?"#5fa35f":hpRatio>.25?"#c6a64b":"#b9473f";
+        ctx.fillRect(barX,barY,barW*hpRatio,barH);
+
+        ctx.restore();
+     }
+ }
+/* =========================================================
+    POLAR BEAR
+ ========================================================= */
+function drawBear(a){
+    ctx.save();
+    ctx.translate(a.x,a.y);
+    /* shadow */
+    ctx.fillStyle="#0007";
+    ctx.beginPath();
+    ctx.ellipse(
+         0,
+         31,
+         34,
+         7,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* legs */
+    ctx.fillStyle="#dfe4e2";
+    ctx.fillRect(-23,10,13,25);
+     ctx.fillRect(10,10,13,25);
+    /* body */
+    ctx.fillStyle="#f0f2ef";
+    ctx.beginPath();
+    ctx.ellipse(
+         0,
+         0,
+         32,
+         23,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* neck/head */
+    ctx.beginPath();
+    ctx.ellipse(
+         -23,
+         -13,
+         20,
+         18,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* ears */
+    ctx.beginPath();
+    ctx.arc(-34,-28,6,0,Math.PI*2);
+     ctx.arc(-14,-29,6,0,Math.PI*2);
+    ctx.fill();
+    /* muzzle */
+    ctx.fillStyle="#cfd4d0";
+    ctx.beginPath();
+    ctx.ellipse(
+         -38,
+         -7,
+         11,
+         8,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* nose */
+    ctx.fillStyle="#111";
+    ctx.beginPath();
+    ctx.ellipse(
+         -43,
+         -9,
+         5,
+         4,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* eyes */
+    ctx.fillStyle="#171717";
+    ctx.beginPath();
+    ctx.arc(-30,-17,2.5,0,Math.PI*2);
+     ctx.arc(-18,-17,2.5,0,Math.PI*2);
+    ctx.fill();
+    /* claws */
+    ctx.strokeStyle="#272727";
+     ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(16,30);
+     ctx.lineTo(16,35);
+    ctx.moveTo(21,30);
+     ctx.lineTo(21,35);
+    ctx.stroke();
+    ctx.restore();
+ }
+/* =========================================================
+    WOLF
+ ========================================================= */
+function drawWolf(a){
+    ctx.save();
+    ctx.translate(a.x,a.y);
+    const facing=player.x<a.x?-1:1;
+    ctx.scale(facing,1);
+    /* shadow */
+    ctx.fillStyle="#0008";
+    ctx.beginPath();
+    ctx.ellipse(
+         0,
+         16,
+         21,
+         4,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* body */
+    ctx.fillStyle="#343a37";
+    ctx.beginPath();
+    ctx.ellipse(
+         0,
+         0,
+         21,
+         11,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* neck */
+    ctx.beginPath();
+    ctx.moveTo(-15,-4);
+     ctx.lineTo(-25,-17);
+     ctx.lineTo(-7,-13);
+     ctx.lineTo(0,-4);
+    ctx.closePath();
+    ctx.fill();
+    /* head */
+    ctx.beginPath();
+    ctx.moveTo(-30,-20);
+     ctx.lineTo(-39,-29);
+     ctx.lineTo(-36,-14);
+     ctx.lineTo(-29,-8);
+     ctx.lineTo(-20,-13);
+     ctx.closePath();
+    ctx.fill();
+    /* ears */
+    ctx.beginPath();
+    ctx.moveTo(-37,-25);
+     ctx.lineTo(-38,-40);
+     ctx.lineTo(-29,-31);
+    ctx.moveTo(-27,-26);
+     ctx.lineTo(-22,-39);
+     ctx.lineTo(-18,-27);
+    ctx.fill();
+    /* muzzle */
+    ctx.fillStyle="#232725";
+    ctx.beginPath();
+    ctx.ellipse(
+         -39,
+         -14,
+         9,
+         5,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* eye */
+    ctx.fillStyle="#d6bd55";
+    ctx.beginPath();
+    ctx.arc(
+         -31,
+         -20,
+         2.2,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* legs */
+    ctx.fillStyle="#292e2c";
+    ctx.fillRect(-12,7,6,12);
+     ctx.fillRect(7,7,6,12);
+    ctx.restore();
+ }
+/* =========================================================
+    ANIMAL DRAW
+ ========================================================= */
+function drawAnimals(){
+    for(const a of animals){
+        if(a.x < -100 || a.x > W+100 || a.y < -100 || a.y > H+100) continue;
+        if(a.hitFlash>0)
+             ctx.globalAlpha=.6;
+        if(a.type==="bear")
+             drawBear(a);
+         else
+             drawWolf(a);
+        ctx.globalAlpha=1;
+     }
+ }
+/* =========================================================
+    PLAYER DRAW
+ ========================================================= */
+function drawPlayer(){
+    if(drivingCar) return;
+    const c=characters[selectedCharacter];
+    const x=player.x;
+     const y=player.y;
+    const r=player.radius;
+    const skin="#c58c70";
+    const tall=
+         selectedCharacter==="maya"
+             ?0
+             :selectedCharacter==="marcus"
+             ?-3
+             :-7;
+    ctx.save();
+    /* shadow */
+    ctx.fillStyle="#0007";
+    ctx.beginPath();
+    ctx.ellipse(
+         x,
+         y+r+12,
+         r+10,
+         5,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* legs */
+    ctx.fillStyle=c.pants;
+    ctx.fillRect(
+         x-r*.58,
+         y+r*.2+tall,
+         r*.47,
+         r*1.35
+     );
+    ctx.fillRect(
+         x+r*.08,
+         y+r*.2+tall,
+         r*.47,
+         r*1.35
+     );
+    /* shoes */
+    ctx.fillStyle="#101111";
+    ctx.fillRect(
+         x-r*.67,
+         y+r*1.48+tall,
+         r*.58,
+         7
+     );
+    ctx.fillRect(
+         x+r*.02,
+         y+r*1.48+tall,
+         r*.58,
+         7
+     );
+    /* torso */
+    ctx.fillStyle=c.shirt;
+    ctx.beginPath();
+    ctx.roundRect(
+         x-r*.78,
+         y-r*.35+tall,
+         r*1.56,
+         r*1.05,
+         4
+     );
+    ctx.fill();
+
+    /* Victor jacket: dark outer panels over his original brown T-shirt. */
+    if(selectedCharacter==="victor"){
+        const jacket="#2f2a27";
+
+        ctx.fillStyle=jacket;
+        /* left outer panel */
+        ctx.beginPath();
+        ctx.moveTo(x-r*.78,y-r*.32+tall);
+        ctx.lineTo(x-r*.20,y-r*.08+tall);
+        ctx.lineTo(x-r*.24,y+r*.68+tall);
+        ctx.lineTo(x-r*.78,y+r*.68+tall);
+        ctx.closePath();
+        ctx.fill();
+
+        /* right outer panel */
+        ctx.beginPath();
+        ctx.moveTo(x+r*.78,y-r*.32+tall);
+        ctx.lineTo(x+r*.20,y-r*.08+tall);
+        ctx.lineTo(x+r*.24,y+r*.68+tall);
+        ctx.lineTo(x+r*.78,y+r*.68+tall);
+        ctx.closePath();
+        ctx.fill();
+
+        /* lighter lapels */
+        ctx.fillStyle="#49403a";
+        ctx.beginPath();
+        ctx.moveTo(x-r*.68,y-r*.30+tall);
+        ctx.lineTo(x-r*.10,y-r*.02+tall);
+        ctx.lineTo(x-r*.30,y+r*.30+tall);
+        ctx.lineTo(x-r*.55,y-r*.03+tall);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(x+r*.68,y-r*.30+tall);
+        ctx.lineTo(x+r*.10,y-r*.02+tall);
+        ctx.lineTo(x+r*.30,y+r*.30+tall);
+        ctx.lineTo(x+r*.55,y-r*.03+tall);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    /* arms */
+    ctx.fillStyle=selectedCharacter==="victor" ? "#2f2a27" : c.shirt;
+    ctx.fillRect(
+         x-r*1.04,
+         y-r*.25+tall,
+         r*.34,
+         r*1.05
+     );
+    ctx.fillRect(
+         x+r*.70,
+         y-r*.25+tall,
+         r*.34,
+         r*1.05
+     );
+    /* hands */
+    ctx.fillStyle=skin;
+    ctx.beginPath();
+    ctx.arc(
+         x-r*.87,
+         y+r*.83+tall,
+         r*.2,
+         0,
+         Math.PI*2
+     );
+    ctx.arc(
+         x+r*.87,
+         y+r*.83+tall,
+         r*.2,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* neck */
+    ctx.fillRect(
+         x-r*.23,
+         y-r*.88+tall,
+         r*.46,
+         r*.4
+     );
+    /* head */
+    ctx.beginPath();
+    ctx.roundRect(
+         x-r*.56,
+         y-r*1.75+tall,
+         r*1.12,
+         r*1.12,
+         r*.38
+     );
+    ctx.fill();
+    /* ears */
+    ctx.beginPath();
+    ctx.ellipse(
+         x-r*.58,
+         y-r*1.35+tall,
+         r*.16,
+         r*.22,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.ellipse(
+         x+r*.58,
+         y-r*1.35+tall,
+         r*.16,
+         r*.22,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* hair */
+    ctx.fillStyle=c.hair;
+    if(c.female){
+        /* Layered shoulder-length hair, scaled for the in-game sprite. */
+        ctx.beginPath();
+        ctx.moveTo(x-r*.68,y-r*1.40+tall);
+        ctx.quadraticCurveTo(x-r*.72,y-r*1.92+tall,x-r*.20,y-r*2.08+tall);
+        ctx.quadraticCurveTo(x+r*.18,y-r*2.20+tall,x+r*.60,y-r*1.90+tall);
+        ctx.quadraticCurveTo(x+r*.72,y-r*1.55+tall,x+r*.58,y-r*.72+tall);
+        ctx.lineTo(x+r*.30,y-r*.48+tall);
+        ctx.quadraticCurveTo(x+r*.42,y-r*1.10+tall,x+r*.28,y-r*1.55+tall);
+        ctx.quadraticCurveTo(x,y-r*1.72+tall,x-r*.28,y-r*1.57+tall);
+        ctx.quadraticCurveTo(x-r*.42,y-r*1.08+tall,x-r*.30,y-r*.46+tall);
+        ctx.lineTo(x-r*.58,y-r*.70+tall);
+        ctx.quadraticCurveTo(x-r*.72,y-r*1.08+tall,x-r*.68,y-r*1.40+tall);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x-r*.50,y-r*1.92+tall);
+        ctx.quadraticCurveTo(x-r*.05,y-r*2.14+tall,x+r*.40,y-r*1.88+tall);
+        ctx.quadraticCurveTo(x+r*.08,y-r*1.82+tall,x-r*.22,y-r*1.55+tall);
+        ctx.closePath();
+        ctx.fill();
+        // A few soft hair strands/highlights make the in-game Maya match the newer preview.
+        ctx.strokeStyle="rgba(255,255,255,.10)";
+        ctx.lineWidth=1.2;
+        ctx.beginPath();
+        ctx.moveTo(x-r*.42,y-r*1.86+tall);
+        ctx.quadraticCurveTo(x-r*.18,y-r*1.58+tall,x-r*.25,y-r*.76+tall);
+        ctx.moveTo(x+r*.24,y-r*1.89+tall);
+        ctx.quadraticCurveTo(x+r*.44,y-r*1.50+tall,x+r*.31,y-r*.74+tall);
+        ctx.stroke();
+    }else{
+        ctx.beginPath();
+        ctx.moveTo(
+             x-r*.6,
+             y-r*1.45+tall
+         );
+        ctx.lineTo(
+             x-r*.42,
+             y-r*2.0+tall
+         );
+        ctx.quadraticCurveTo(
+             x,
+             y-r*2.15+tall,
+             x+r*.44,
+             y-r*2.0+tall
+         );
+        ctx.lineTo(
+             x+r*.6,
+             y-r*1.43+tall
+         );
+        ctx.lineTo(
+             x+r*.3,
+             y-r*1.65+tall
+         );
+        ctx.lineTo(
+             x-r*.3,
+             y-r*1.65+tall
+         );
+        ctx.closePath();
+        ctx.fill();
+     }
+    /* eyes */
+    ctx.fillStyle=c.eyes;
+    ctx.beginPath();
+    ctx.ellipse(
+         x-r*.27,
+         y-r*1.39+tall,
+         3.4,
+         2.5,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.ellipse(
+         x+r*.15,
+         y-r*1.39+tall,
+         3.4,
+         2.5,
+         0,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* pupils */
+    ctx.fillStyle="#111";
+    ctx.beginPath();
+    ctx.arc(
+         x-r*.27,
+         y-r*1.39+tall,
+         1.2,
+         0,
+         Math.PI*2
+     );
+    ctx.arc(
+         x+r*.15,
+         y-r*1.39+tall,
+         1.2,
+         0,
+         Math.PI*2
+     );
+    ctx.fill();
+    /* eyebrows */
+    ctx.strokeStyle="#362923";
+     ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(
+         x-r*.36,
+         y-r*1.53+tall
+     );
+    ctx.lineTo(
+         x-r*.17,
+         y-r*1.55+tall
+     );
+    ctx.moveTo(
+         x+r*.05,
+         y-r*1.55+tall
+     );
+    ctx.lineTo(
+         x+r*.25,
+         y-r*1.53+tall
+     );
+    ctx.stroke();
+    /* nose */
+    ctx.strokeStyle="#865c4c";
+     ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(
+         x,
+         y-r*1.29+tall
+     );
+    ctx.lineTo(
+         x-1,
+         y-r*1.04+tall
+     );
+    ctx.lineTo(
+         x+3,
+         y-r*1.03+tall
+     );
+    ctx.stroke();
+    /* mouth */
+    ctx.strokeStyle="#653e39";
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(x-r*.16,y-r*.91+tall);
+    if(c.female){
+        ctx.quadraticCurveTo(x,y-r*.925+tall,x+r*.16,y-r*.91+tall);
+    }else{
+        ctx.quadraticCurveTo(x,y-r*.87+tall,x+r*.18,y-r*.91+tall);
+    }
+    ctx.stroke();
+    /* Victor beard */
+    if(c.beard){
+        ctx.fillStyle=c.hair;
+        ctx.beginPath();
+        ctx.moveTo(
+             x-r*.43,
+             y-r*1.02+tall
+         );
+        ctx.lineTo(
+             x-r*.30,
+             y-r*.73+tall
+         );
+        ctx.lineTo(
+             x,
+             y-r*.61+tall
+         );
+        ctx.lineTo(
+             x+r*.30,
+             y-r*.73+tall
+         );
+        ctx.lineTo(
+             x+r*.43,
+             y-r*1.02+tall
+         );
+        ctx.lineTo(
+             x+r*.20,
+             y-r*.90+tall
+         );
+        ctx.lineTo(
+             x-r*.20,
+             y-r*.90+tall
+         );
+        ctx.closePath();
+        ctx.fill();
+     }
+    /* Marcus blue hoodie detail */
+    if(selectedCharacter==="marcus"){
+        ctx.strokeStyle="#153e68";
+         ctx.lineWidth=3;
+        ctx.beginPath();
+        ctx.arc(
+             x,
+             y-r*.28+tall,
+             r*.48,
+             0,
+             Math.PI
+         );
+        ctx.stroke();
+     }
+    drawWeapon();
+    ctx.restore();
+ }
+/* =========================================================
+    WEAPON
+ ========================================================= */
+function drawWeapon(){
+    const angle=Math.atan2(
+         mouseY-player.y,
+         mouseX-player.x
+     );
+    ctx.save();
+    ctx.translate(
+         player.x,
+         player.y
+     );
+    ctx.rotate(angle);
+    /*
+      * Smaller rifle.
+      */
+    const scale=.72;
+    ctx.scale(scale,scale);
+    /* stock */
+    ctx.fillStyle="#493225";
+    ctx.fillRect(
+         -player.radius-20,
+         -3,
+         19,
+         7
+     );
+    /* receiver */
+    ctx.fillStyle="#171918";
+    ctx.fillRect(
+         player.radius-2,
+         -6,
+         29,
+         11
+     );
+    /* upper */
+    ctx.fillStyle="#2a2d2b";
+    ctx.fillRect(
+         player.radius+3,
+         -8,
+         17,
+         6
+     );
+    /* barrel */
+    ctx.fillStyle="#111";
+    ctx.fillRect(
+         player.radius+27,
+         -3,
+         30,
+         6
+     );
+    /* muzzle */
+    ctx.fillRect(
+         player.radius+55,
+         -4,
+         6,
+         8
+     );
+    /* magazine */
+    ctx.fillStyle="#322721";
+    ctx.beginPath();
+    ctx.moveTo(
+         player.radius+3,
+         5
+     );
+    ctx.lineTo(
+         player.radius+14,
+         5
+     );
+    ctx.lineTo(
+         player.radius+11,
+         20
+     );
+    ctx.lineTo(
+         player.radius+1,
+         18
+     );
+    ctx.closePath();
+    ctx.fill();
+    /* grip */
+    ctx.fillStyle="#29231f";
+    ctx.fillRect(
+         player.radius+7,
+         6,
+         8,
+         16
+     );
+    ctx.restore();
+ }
+/* =========================================================
+    BULLET DRAW
+ ========================================================= */
+function drawBullets(){
+    ctx.fillStyle="#e6ca58";
+    for(const b of bullets){
+        if(b.x < -20 || b.x > W+20 || b.y < -20 || b.y > H+20) continue;
+        ctx.beginPath();
+        ctx.arc(
+             b.x,
+             b.y,
+             3,
+             0,
+             Math.PI*2
+         );
+        ctx.fill();
+     }
+ }
+/* =========================================================
+    WEATHER
+ ========================================================= */
+function drawWeather(){
+    const time=Date.now();
+    if(locationName==="snow"){
+        ctx.fillStyle="#fff9";
+        for(let i=0;i<55;i++){
+            const x=(i*83)%W;
+             const y=(i*137+time/22)%H;
+            ctx.beginPath();
+            ctx.arc(
+                 x,
+                 y,
+                 i%3===0?2.5:1.5,
+                 0,
+                 Math.PI*2
+             );
+            ctx.fill();
+         }
+     }
+    if(locationName==="rain"){
+        ctx.strokeStyle="#a9c6ca66";
+         ctx.lineWidth=1;
+        for(let i=0;i<65;i++){
+            const x=(i*91)%W;
+             const y=(i*127+time/7)%H;
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+             ctx.lineTo(x-5,y+15);
+            ctx.stroke();
+         }
+     }
+ }
+/* =========================================================
+    HUD
+ ========================================================= */
+function updateHUD(){
+    if(!player)return;
+    document.getElementById("hp")
+         .textContent=Math.max(
+             0,
+             Math.floor(player.health)
+         );
+    document.getElementById("ammo")
+         .textContent=player.ammo;
+    document.getElementById("score")
+         .textContent=score;
+    const fuelEl=document.getElementById("fuel");
+    if(fuelEl){
+        fuelEl.textContent=drivingCar ? Math.ceil(drivingCar.fuel||0)+"%" : "--";
+    }
+ }
+/* =========================================================
+    MESSAGE
+ ========================================================= */
+let messageTimeout=null;
+function showMessage(text){
+    const element=document.getElementById("message");
+    element.textContent=text;
+     element.style.opacity=1;
+    clearTimeout(messageTimeout);
+    messageTimeout=setTimeout(()=>{
+         element.style.opacity=0;
+     },900);
+ }
+/* =========================================================
+    START GAME
+ ========================================================= */
+function startGame(){
+    difficulty=
+         document.getElementById("difficulty").value;
+    locationName=
+         document.getElementById("location").value;
+    const c=characters[selectedCharacter];
+    player={
+        x:W/2,
+         y:H/2,
+        radius:c.radius,
+        speed:c.speed,
+        health:c.health,
+         maxHealth:c.health,
+        power:c.power,
+        ammo:difficulties[difficulty].ammo
+     };
+    zombies=[];
+     animals=[];
+     bullets=[];
+     pickups=[];
+    score=0;
+     survivalTime=0;
+    animalTimer=
+         30+
+         Math.random()*30;
+    paused=false;
+    running=true;
+    keys={};
+    drivingCar=null;
+    carVelocity=0;
+    worldScroll=0;
+    gasTravelSinceLast=0;
+    nextGasStationTravel=2600+Math.random()*2200;
+    createMap();
+
+    // Make sure the player never begins inside an obstacle.
+    if(blocked(player.x, player.y, player.radius)){
+        let found=false;
+        for(let radius=40; radius<Math.max(W,H) && !found; radius+=40){
+            for(let angle=0; angle<Math.PI*2; angle+=Math.PI/8){
+                const sx=W/2 + Math.cos(angle)*radius;
+                const sy=H/2 + Math.sin(angle)*radius;
+                if(!blocked(sx,sy,player.radius)){
+                    player.x=sx;
+                    player.y=sy;
+                    found=true;
+                    break;
+                }
+            }
+        }
+    }
+    /*
+      * Spawn starting zombies around the map.
+      */
+    for(
+         let i=0;
+         i<difficulties[difficulty].startingZombies;
+         i++
+     ){
+         spawnZombie();
+     }
+    document.getElementById("menu")
+         .style.display="none";
+    document.getElementById("deathScreen")
+         .style.display="none";
+    document.getElementById("pauseScreen")
+         .style.display="none";
+    document.getElementById("hud").style.display="block";
+    document.getElementById("pause").style.display="block";
+    document.getElementById("help").style.display="block";
+    document.getElementById("mobileControls").classList.add("active");
+    loadMobileLayout();
+    canvas.focus();
+    lastTime=performance.now();
+    lastHudRender=0;
+    updateHUD();
+    const session=++gameSessionId;
+    requestAnimationFrame(time=>gameLoop(time,session));
+ }
+/* =========================================================
+    GAME LOOP
+ ========================================================= */
+function gameLoop(time,session){
+    if(session!==gameSessionId || !running)return;
+    if(!paused){
+        let dt=(time-lastTime)/1000;
+        if(dt>.1)
+             dt=.1;
+        lastTime=time;
+        survivalTime+=dt;
+        updatePlayer();
+         updateBullets();
+         updateEnemies();
+        drawBackground();
+         drawMap();
+         drawPickups();
+         drawBullets();
+         drawZombies();
+         drawAnimals();
+         drawPlayer();
+         drawWeather();
+        // DOM text updates do not need to run every animation frame.
+        if(time-lastHudRender>=80){
+            updateHUD();
+            lastHudRender=time;
+        }
+        if(player.health<=0){
+            player.health=0;
+            running=false;
+            document.getElementById("finalScore")
+                 .textContent=score;
+            document.getElementById("finalTime")
+                 .textContent=formatTime(survivalTime);
+            document.getElementById("deathScreen")
+                 .style.display="flex";
+            document.getElementById("mobileControls").classList.remove("active");
+            return;
+         }
+     }
+    requestAnimationFrame(nextTime=>gameLoop(nextTime,session));
+ }
+/* =========================================================
+    TIME
+ ========================================================= */
+function formatTime(seconds){
+    const minutes=Math.floor(seconds/60);
+     const secs=Math.floor(seconds%60);
+    return minutes+":"+
+         String(secs).padStart(2,"0");
+ }
+/* =========================================================
+    PAUSE
+ ========================================================= */
+function toggleControlsPanel(){
+    const panel=document.getElementById("pauseControls");
+    if(!panel) return;
+    panel.classList.toggle("open");
+}
+
+function togglePause(){
+    if(!running)return;
+    paused=!paused;
+    const controlsPanel=document.getElementById("pauseControls");
+    if(paused && controlsPanel) controlsPanel.classList.remove("open");
+    document.getElementById("pauseScreen")
+         .style.display=
+             paused
+                 ?"flex"
+                 :"none";
+    if(!paused){
+        lastTime=performance.now();
+     }
+ }
+/* =========================================================
+    RESTART
+ ========================================================= */
+function restart(){
+    running=false;
+    gameSessionId++;
+    document.getElementById("pauseScreen")
+         .style.display="none";
+    document.getElementById("deathScreen")
+         .style.display="none";
+    startGame();
+ }
+/* =========================================================
+    MAIN MENU
+ ========================================================= */
+function returnToMenu(){
+    running=false;
+     paused=false;
+    gameSessionId++;
+    document.getElementById("pauseScreen")
+         .style.display="none";
+    document.getElementById("deathScreen")
+         .style.display="none";
+    document.getElementById("menu")
+         .style.display="flex";
+    document.getElementById("hud").style.display="none";
+    document.getElementById("pause").style.display="none";
+    document.getElementById("help").style.display="none";
+    document.getElementById("mobileControls").classList.remove("active");
+ }
+/* =========================================================
+    KEYBOARD
+ ========================================================= */
+function setMoveKey(event, pressed){
+    const key=event.key ? event.key.toLowerCase() : "";
+    if(key) keys[key]=pressed;
+    if(event.code) keys[event.code]=pressed;
+
+    const movementCodes=[
+        "KeyW","KeyA","KeyS","KeyD",
+        "ArrowUp","ArrowDown","ArrowLeft","ArrowRight"
+    ];
+    if(movementCodes.includes(event.code)){
+        event.preventDefault();
+    }
+}
+
+window.addEventListener("keydown",event=>{
+    setMoveKey(event,true);
+    if(event.code==="Space"){
+        event.preventDefault();
+        shoot();
+    }
+    if(event.code==="KeyP" && !event.repeat){
+        togglePause();
+    }
+    if(event.code==="KeyE" && !event.repeat){
+        event.preventDefault();
+        toggleVehicle();
+    }
+});
+
+window.addEventListener("keyup",event=>{
+    setMoveKey(event,false);
+});
+
+window.addEventListener("blur",()=>{
+    keys={};
+});
+
+canvas.addEventListener("click",()=>canvas.focus());
+/* =========================================================
+    MOUSE
+ ========================================================= */
+canvas.addEventListener("mousemove",event=>{
+    mouseX=event.clientX;
+     mouseY=event.clientY;
+ });
+canvas.addEventListener("mousedown",event=>{
+    if(event.button===0)
+         shoot();
+ });
+/* =========================================================
+    MOBILE CONTROLS
+ ========================================================= */
+const mobileControls=document.getElementById("mobileControls");
+const mobileJoystick=document.getElementById("mobileJoystick");
+const joystickKnob=document.getElementById("joystickKnob");
+const mobileCustomize=document.getElementById("mobileCustomize");
+const mobileResetLayout=document.getElementById("mobileResetLayout");
+
+let mobileCustomizeMode=false;
+let dragTarget=null;
+let dragPointerId=null;
+let dragOffsetX=0;
+let dragOffsetY=0;
+
+const MOBILE_LAYOUT_KEY="outbreakMobileLayoutV1";
+
+function saveMobileLayout(){
+    const items=["mobileJoystick","mobileCar","mobileShoot","mobilePause"];
+    const layout={};
+    for(const id of items){
+        const el=document.getElementById(id);
+        const rect=el.getBoundingClientRect();
+        layout[id]={
+            left:rect.left,
+            top:rect.top
+        };
+    }
+    try{
+        localStorage.setItem(MOBILE_LAYOUT_KEY,JSON.stringify(layout));
+    }catch(e){}
+}
+
+function applyMobileLayout(layout){
+    if(!layout) return;
+    for(const [id,pos] of Object.entries(layout)){
+        const el=document.getElementById(id);
+        if(!el || !pos) continue;
+
+        const maxX=Math.max(0,window.innerWidth-el.offsetWidth);
+        const maxY=Math.max(0,window.innerHeight-el.offsetHeight);
+        const x=Math.max(0,Math.min(maxX,Number(pos.left)||0));
+        const y=Math.max(0,Math.min(maxY,Number(pos.top)||0));
+
+        el.style.position="fixed";
+        el.style.left=x+"px";
+        el.style.top=y+"px";
+        el.style.right="auto";
+        el.style.bottom="auto";
+        el.style.margin="0";
+        el.style.order="initial";
+        el.style.zIndex="20";
+    }
+}
+
+function loadMobileLayout(){
+    try{
+        const raw=localStorage.getItem(MOBILE_LAYOUT_KEY);
+        if(raw) applyMobileLayout(JSON.parse(raw));
+    }catch(e){}
+}
+
+function clearMobileCustomStyles(){
+    for(const id of ["mobileJoystick","mobileCar","mobileShoot","mobilePause"]){
+        const el=document.getElementById(id);
+        el.style.position="";
+        el.style.left="";
+        el.style.top="";
+        el.style.right="";
+        el.style.bottom="";
+        el.style.margin="";
+        el.style.order="";
+        el.style.zIndex="";
+    }
+}
+
+function setCustomizeMode(enabled){
+    mobileCustomizeMode=enabled;
+    mobileControls.classList.toggle("customizing",enabled);
+    mobileCustomize.textContent=enabled ? "DONE" : "CUSTOMIZE";
+    if(enabled){
+        resetJoystick();
+    }else{
+        saveMobileLayout();
+    }
+}
+
+mobileCustomize.addEventListener("pointerdown",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    setCustomizeMode(!mobileCustomizeMode);
+});
+
+mobileResetLayout.addEventListener("pointerdown",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    clearMobileCustomStyles();
+    try{ localStorage.removeItem(MOBILE_LAYOUT_KEY); }catch(e){}
+});
+
+function beginMobileDrag(event,el){
+    if(!mobileCustomizeMode) return false;
+    event.preventDefault();
+    event.stopPropagation();
+
+    dragTarget=el;
+    dragPointerId=event.pointerId;
+
+    const rect=el.getBoundingClientRect();
+    dragOffsetX=event.clientX-rect.left;
+    dragOffsetY=event.clientY-rect.top;
+
+    el.style.position="fixed";
+    el.style.left=rect.left+"px";
+    el.style.top=rect.top+"px";
+    el.style.right="auto";
+    el.style.bottom="auto";
+    el.style.margin="0";
+    el.style.order="initial";
+    el.style.zIndex="22";
+
+    try{ el.setPointerCapture(event.pointerId); }catch(e){}
+    return true;
+}
+
+function moveMobileDrag(event){
+    if(!dragTarget || event.pointerId!==dragPointerId) return;
+    event.preventDefault();
+
+    const maxX=Math.max(0,window.innerWidth-dragTarget.offsetWidth);
+    const maxY=Math.max(0,window.innerHeight-dragTarget.offsetHeight);
+
+    const x=Math.max(0,Math.min(maxX,event.clientX-dragOffsetX));
+    const y=Math.max(0,Math.min(maxY,event.clientY-dragOffsetY));
+
+    dragTarget.style.left=x+"px";
+    dragTarget.style.top=y+"px";
+}
+
+function endMobileDrag(event){
+    if(!dragTarget || (event.pointerId!==undefined && event.pointerId!==dragPointerId)) return;
+    saveMobileLayout();
+    dragTarget=null;
+    dragPointerId=null;
+}
+
+for(const id of ["mobileJoystick","mobileCar","mobileShoot","mobilePause"]){
+    const el=document.getElementById(id);
+    el.addEventListener("pointerdown",event=>{
+        beginMobileDrag(event,el);
+    },true);
+    el.addEventListener("pointermove",moveMobileDrag,true);
+    el.addEventListener("pointerup",endMobileDrag,true);
+    el.addEventListener("pointercancel",endMobileDrag,true);
+    el.addEventListener("lostpointercapture",endMobileDrag,true);
+}
+
+window.addEventListener("resize",()=>{
+    if(!mobileCustomizeMode) loadMobileLayout();
+});
+
+loadMobileLayout();
+
+function setMobileKey(key,pressed){
+    keys[key]=pressed;
+    const codeMap={w:"KeyW",a:"KeyA",s:"KeyS",d:"KeyD"};
+    if(codeMap[key]) keys[codeMap[key]]=pressed;
+}
+
+function clearJoystickKeys(){
+    setMobileKey("w",false);
+    setMobileKey("a",false);
+    setMobileKey("s",false);
+    setMobileKey("d",false);
+}
+
+let joystickPointerId=null;
+
+function updateJoystick(clientX,clientY){
+    const rect=mobileJoystick.getBoundingClientRect();
+    const cx=rect.left+rect.width/2;
+    const cy=rect.top+rect.height/2;
+    let dx=clientX-cx;
+    let dy=clientY-cy;
+
+    const max=rect.width*.32;
+    const distance=Math.hypot(dx,dy);
+    if(distance>max){
+        dx=dx/distance*max;
+        dy=dy/distance*max;
+    }
+
+    joystickKnob.style.transform=
+        `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+
+    const dead=max*.24;
+    clearJoystickKeys();
+
+    if(dy<-dead) setMobileKey("w",true);
+    if(dy> dead) setMobileKey("s",true);
+    if(dx<-dead) setMobileKey("a",true);
+    if(dx> dead) setMobileKey("d",true);
+}
+
+function resetJoystick(){
+    clearJoystickKeys();
+    joystickPointerId=null;
+    joystickKnob.style.transform="translate(-50%,-50%)";
+}
+
+mobileJoystick.addEventListener("pointerdown",event=>{
+    if(mobileCustomizeMode) return;
+    event.preventDefault();
+    joystickPointerId=event.pointerId;
+    try{ mobileJoystick.setPointerCapture(event.pointerId); }catch(e){}
+    updateJoystick(event.clientX,event.clientY);
+});
+
+mobileJoystick.addEventListener("pointermove",event=>{
+    if(mobileCustomizeMode) return;
+    if(event.pointerId!==joystickPointerId) return;
+    event.preventDefault();
+    updateJoystick(event.clientX,event.clientY);
+});
+
+mobileJoystick.addEventListener("pointerup",event=>{
+    if(mobileCustomizeMode) return;
+    if(event.pointerId!==joystickPointerId) return;
+    event.preventDefault();
+    resetJoystick();
+});
+
+mobileJoystick.addEventListener("pointercancel",resetJoystick);
+mobileJoystick.addEventListener("lostpointercapture",resetJoystick);
+
+const mobileShootButton=document.getElementById("mobileShoot");
+mobileShootButton.addEventListener("pointerdown",event=>{
+    if(mobileCustomizeMode) return;
+    event.preventDefault();
+    mobileShootButton.classList.add("pressed");
+    shootMobile();
+});
+mobileShootButton.addEventListener("pointerup",()=>mobileShootButton.classList.remove("pressed"));
+mobileShootButton.addEventListener("pointercancel",()=>mobileShootButton.classList.remove("pressed"));
+
+const mobileCarButton=document.getElementById("mobileCar");
+mobileCarButton.addEventListener("pointerdown",event=>{
+    if(mobileCustomizeMode) return;
+    event.preventDefault();
+    mobileCarButton.classList.add("pressed");
+    toggleVehicle();
+});
+mobileCarButton.addEventListener("pointerup",()=>mobileCarButton.classList.remove("pressed"));
+mobileCarButton.addEventListener("pointercancel",()=>mobileCarButton.classList.remove("pressed"));
+
+const mobilePauseButton=document.getElementById("mobilePause");
+mobilePauseButton.addEventListener("pointerdown",event=>{
+    if(mobileCustomizeMode) return;
+    event.preventDefault();
+    mobilePauseButton.classList.add("pressed");
+    togglePause();
+});
+mobilePauseButton.addEventListener("pointerup",()=>mobilePauseButton.classList.remove("pressed"));
+mobilePauseButton.addEventListener("pointercancel",()=>mobilePauseButton.classList.remove("pressed"));
+
+/* =========================================================
+    TOUCH
+ ========================================================= */
+canvas.addEventListener("touchstart",event=>{
+    if(event.touches.length===0)return;
+    const touch=event.touches[0];
+    mouseX=touch.clientX;
+     mouseY=touch.clientY;
+    shoot();
+},{passive:true});
+canvas.addEventListener("touchmove",event=>{
+    if(event.touches.length===0)return;
+    const touch=event.touches[0];
+    mouseX=touch.clientX;
+     mouseY=touch.clientY;
+},{passive:true});
+/* =========================================================
+    INITIAL DRAW
+ ========================================================= */
+document.getElementById("hud").style.display="none";
+document.getElementById("pause").style.display="none";
+document.getElementById("help").style.display="none";
+drawCharacterPreview();
+</script>
+</body>
+ </html>
